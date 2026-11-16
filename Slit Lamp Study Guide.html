@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slit Lamp Study Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
+<style>
+/* One visual world: the darkened clinic room. Deep navy-black, the warm slit beam as accent, cobalt for UI,
+   fluorescein green for "good". Layout: simulator first (eyepiece view + instrument panel), then a compact cheat sheet. */
+:root{
+  --bg:#070b16; --surface:#0f1628; --surface2:#141d34; --line:#223152; --ink:#e9edf6; --muted:#93a1bf;
+  --beam:#ffd27a; --cobalt:#7b97ff; --fluo:#6fe38f; --warn:#f3a95c; --crit:#ff7f73;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"IBM Plex Sans",system-ui,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;
+  background-image:radial-gradient(900px 420px at 15% -5%,rgba(255,210,122,.10),transparent 60%),radial-gradient(800px 500px at 100% 10%,rgba(123,151,255,.10),transparent 60%)}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;line-height:1.2}
+p{margin:0}
+:focus-visible{outline:2px solid var(--beam);outline-offset:2px;border-radius:8px}
+
+header.top{max-width:1120px;margin:0 auto;padding:36px 16px 20px;display:grid;gap:10px}
+.kicker{font-family:var(--f-mono);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--beam)}
+header.top h1{font-size:clamp(2rem,5vw,3.1rem);letter-spacing:-.01em}
+header.top h1 em{font-style:italic;color:var(--beam);font-weight:500}
+header.top p{color:var(--muted);max-width:60ch}
+
+nav.bar{position:sticky;top:0;z-index:20;background:rgba(7,11,22,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.bar ul{list-style:none;margin:0 auto;padding:10px 16px;display:flex;gap:6px;overflow-x:auto;max-width:1120px;scrollbar-width:none}
+nav.bar a{display:block;white-space:nowrap;padding:5px 13px;border-radius:999px;text-decoration:none;color:var(--muted);font-size:.88rem;border:1px solid var(--line)}
+nav.bar a:hover{color:var(--ink);border-color:var(--beam)}
+
+main{max-width:1120px;margin:0 auto;padding:18px 16px 70px;display:grid;gap:56px}
+section{display:grid;gap:16px}
+h2{font-size:1.7rem}
+.sec-sub{color:var(--muted);max-width:66ch}
+
+/* ---------- simulator ---------- */
+.tabbar{position:relative;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#0d1426,#0a1020)}
+.tabbar::before,.tabbar::after{content:"";position:absolute;top:0;bottom:0;width:22px;pointer-events:none;z-index:1}
+.tabbar::before{left:0;border-radius:14px 0 0 14px;background:linear-gradient(90deg,#0b1122,transparent)}
+.tabbar::after{right:0;border-radius:0 14px 14px 0;background:linear-gradient(270deg,#0b1122,transparent)}
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;padding:0 6px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:grid;gap:1px;text-align:left;font:inherit;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:10px 14px 9px;cursor:pointer;position:relative}
+.tab+.tab::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:1px;background:var(--line)}
+.tab .ix{font-family:var(--f-mono);font-size:.66rem;letter-spacing:.08em;color:#5d6b8a}
+.tab .nm{font-size:.86rem;font-weight:500;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--beam)}
+.tab[aria-selected="true"] .ix{color:var(--beam)}
+.tab[aria-selected="true"] .nm{font-weight:600}
+
+.simwrap{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.simwrap{grid-template-columns:1fr}}
+.scope{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:grid;gap:12px}
+.lens{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px #1b2440,0 20px 50px rgba(0,0,0,.45)}
+.lens canvas{display:block;width:100%;height:auto;aspect-ratio:16/10}
+.lens{background:#020203;box-shadow:inset 0 0 0 1px #1b2440,0 20px 50px rgba(0,0,0,.45)}
+.scopebar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.readout{display:flex;flex-wrap:wrap;gap:5px}
+.readout span{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#cfd7ea;background:#070b14;border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+.readout span.hd{color:var(--beam);border-color:#4a3c1a}
+.controls{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.ctl{display:grid;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ctl label,.ctl .lbl{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-family:var(--f-mono);color:var(--beam);font-size:.85rem}
+input[type=range]{width:100%;accent-color:var(--beam)}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#0a1020;width:fit-content;max-width:100%}
+.seg button{font:inherit;font-size:.8rem;padding:6px 12px;border:none;border-right:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.seg button:last-child{border-right:none}
+.seg button:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+.seg button[aria-pressed="true"]{background:#1a2440;color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--beam)}
+.actbtn{font:inherit;font-weight:600;font-size:.85rem;padding:7px 14px;border-radius:9px;border:none;background:var(--fluo);color:#06210f;cursor:pointer}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;display:grid;gap:14px}
+.panel h3{font-size:1.45rem}
+.panel .alt{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.chip{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:.78rem;color:var(--muted)}
+.chip b{display:block;color:var(--ink);font-size:.9rem;font-weight:600}
+.geo{background:#0a1020;border:1px solid var(--line);border-radius:12px;padding:6px}
+.geo svg{display:block;width:100%;height:auto;max-height:190px;margin:0 auto}
+.blk .t{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.07em;text-transform:uppercase;color:var(--beam);margin-bottom:2px}
+.blk p,.blk li{color:#d5dbe9;font-size:.93rem}
+.blk ul{margin:0;padding-left:18px}
+.tip{border-left:3px solid var(--fluo);background:rgba(111,227,143,.08);padding:9px 12px;border-radius:8px;font-size:.9rem}
+#live{font-size:.95rem;color:var(--beam);min-height:1.5em;line-height:1.5}
+
+/* ---------- cheat sheet ---------- */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:grid;gap:8px;align-content:start}
+.card h3{font-size:1.1rem}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:2px 0;color:#d5dbe9}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface2)}
+tr:last-child td{border-bottom:none}
+td.n{font-family:var(--f-mono);white-space:nowrap}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:.8rem;font-weight:600}
+.ok{background:rgba(111,227,143,.14);color:var(--fluo)}
+.w{background:rgba(243,169,92,.15);color:var(--warn)}
+.c{background:rgba(255,127,115,.15);color:var(--crit)}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.order span{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:.88rem}
+.order i{color:var(--beam);font-style:normal}
+
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:14px}
+.qhead{display:flex;justify-content:space-between;color:var(--muted);font-family:var(--f-mono);font-size:.82rem}
+.quiz h3{font-size:1.2rem}
+.qopts{display:grid;gap:8px}
+.qopt{text-align:left;font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);cursor:pointer}
+.qopt:hover:not(:disabled){border-color:var(--beam)}
+.qopt.right{border-color:var(--fluo);background:rgba(111,227,143,.12)}
+.qopt.wrong{border-color:var(--crit);background:rgba(255,127,115,.12)}
+.qopt:disabled{cursor:default}
+#qexp{display:none}
+.btn{font:inherit;font-weight:600;padding:9px 18px;border-radius:10px;border:none;background:var(--beam);color:#1a1204;cursor:pointer;justify-self:start}
+footer{max-width:1120px;margin:0 auto;padding:0 16px 40px;color:var(--muted);font-size:.84rem}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="kicker">Final-year optometry · practical exam</div>
+  <h1>The slit lamp, <em>seen through the eyepieces</em></h1>
+  <p>Pick a technique, move the controls, and watch what changes. Then the must-know cheat sheet and a quick quiz.</p>
+</header>
+
+<nav class="bar" aria-label="Sections">
+  <ul>
+    <li><a href="#sim">Simulator</a></li>
+    <li><a href="#which">Which technique?</a></li>
+    <li><a href="#setup">Set-up</a></li>
+    <li><a href="#structures">Structures</a></li>
+    <li><a href="#cataract">Cataract types</a></li>
+    <li><a href="#vh">Van Herick grades</a></li>
+    <li><a href="#pearls">Pearls</a></li>
+    <li><a href="#quiz">Quiz</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<section id="sim">
+  <div class="tabbar"><div class="tabs" role="tablist" id="tabs" aria-label="Illumination technique"></div></div>
+  <div class="simwrap">
+    <div class="scope">
+      <div class="lens"><canvas id="cv" width="640" height="400" aria-label="Simulated view through the slit lamp eyepieces"></canvas></div>
+      
+      <div id="live" aria-live="polite"></div>
+      <div class="controls" id="controls"></div>
+    </div>
+    <aside class="panel" aria-live="polite">
+      <div>
+        <div class="alt" id="pAlt"></div>
+        <h3 id="pName"></h3>
+      </div>
+      <div class="geo">
+        <svg viewBox="0 0 220 150" aria-label="Instrument geometry, top view">
+          <defs>
+            <linearGradient id="beamG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a" stop-opacity=".15"/><stop offset="1" stop-color="#ffd27a" stop-opacity=".85"/></linearGradient>
+          </defs>
+          <g id="gMicro"><rect x="98" y="18" width="24" height="44" rx="5" fill="#223152" stroke="#7b97ff"/><rect x="101" y="10" width="7" height="10" rx="2" fill="#7b97ff"/><rect x="112" y="10" width="7" height="10" rx="2" fill="#7b97ff"/><line x1="110" y1="62" x2="110" y2="118" stroke="#7b97ff" stroke-dasharray="3 3"/></g>
+          <g id="gLight"><polygon id="gBeam" points="110,70 110,70 110,124 110,124" fill="url(#beamG)"/><rect x="101" y="40" width="18" height="30" rx="4" fill="#3a2f12" stroke="#ffd27a"/></g>
+          <path d="M96 132 A16 16 0 1 0 124 132" fill="#1a2440" stroke="#93a1bf"/><path d="M98 126 Q110 116 122 126" fill="none" stroke="#e9edf6" stroke-width="1.5"/>
+          <text x="6" y="12" fill="#93a1bf" font-size="8" font-family="IBM Plex Mono, monospace">TOP VIEW</text>
+          <text x="214" y="12" text-anchor="end" fill="#ffd27a" font-size="8" font-family="IBM Plex Sans, sans-serif">● light</text>
+          <text x="214" y="23" text-anchor="end" fill="#7b97ff" font-size="8" font-family="IBM Plex Sans, sans-serif">● microscope</text>
+          <text x="6" y="146" fill="#93a1bf" font-size="8" font-family="IBM Plex Sans, sans-serif">← temporal</text>
+          <text id="gAng" x="214" y="146" text-anchor="end" fill="#e9edf6" font-size="9" font-family="IBM Plex Mono, monospace"></text>
+        </svg>
+      </div>
+      <div class="chips" id="pChips" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="blk"><div class="t">What you see</div><p id="pSee"></p></div>
+      <div class="blk"><div class="t">Use it for</div><ul id="pUse"></ul></div>
+      <div class="tip" id="pTip"></div>
+    </aside>
+  </div>
+</section>
+
+<section id="which">
+  <h2>Which technique for what?</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Technique</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr><td><b>Diffuse</b></td><td>First look: lids, conjunctiva, CL fit</td></tr>
+      <tr><td><b>Optic section</b></td><td><b>Depth</b> of lesions, corneal thickness, nuclear cataract</td></tr>
+      <tr><td><b>Parallelepiped</b></td><td>Scan the cornea: scars, vessels, FB, KPs</td></tr>
+      <tr><td><b>Conical beam</b></td><td><b>AC cells & flare</b> (uveitis)</td></tr>
+      <tr><td><b>Specular reflection</b></td><td><b>Endothelium</b>: guttata, polymegethism</td></tr>
+      <tr><td><b>Retroillumination</b></td><td>Cortical/PSC cataract, iris TIDs, microcysts</td></tr>
+      <tr><td><b>Sclerotic scatter</b></td><td>Central corneal clouding, oedema, faint scars</td></tr>
+      <tr><td><b>Tangential</b></td><td>Iris surface, raised naevi</td></tr>
+      <tr><td><b>Cobalt blue + NaFl</b></td><td>Staining, TBUT, RGP fit, Seidel</td></tr>
+      <tr><td><b>Red-free</b></td><td>Vessels and haemorrhages turn black</td></tr>
+      <tr><td><b>Van Herick</b></td><td>Angle depth before dilating</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="setup">
+  <h2>Set-up and order</h2>
+  <div class="grid">
+    <div class="card"><h3>Set-up</h3><ul>
+      <li>Disinfect chin and forehead rest; wash hands.</li>
+      <li>Lateral canthus at the <b>canthus marker</b>.</li>
+      <li>Focus eyepieces, set the <b>PD</b>.</li>
+      <li>Start <b>low mag, low light, diffuse</b>.</li>
+      <li>Light from the <b>temporal</b> side.</li></ul></div>
+    <div class="card"><h3>Order: outside → in</h3>
+      <div class="order"><span>Lids & lashes</span><i>→</i><span>Conjunctiva</span><i>→</i><span>Tear film</span><i>→</i><span>Cornea</span><i>→</i><span>AC + Van Herick</span><i>→</i><span>Iris</span><i>→</i><span>Lens</span><i>→</i><span>Ant. vitreous</span><i>→</i><span>Fluorescein last</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="structures">
+  <h2>Each structure: what to check</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Structure</th><th>Technique</th><th>Must-check</th></tr></thead>
+    <tbody>
+      <tr><td><b>Lids & lashes</b></td><td>Diffuse → parallelepiped</td><td>Collarettes (Demodex), MGD: capped glands, thick secretion</td></tr>
+      <tr><td><b>Conjunctiva</b></td><td>Diffuse, lid eversion, red-free</td><td>Redness grade; <b>papillae</b> (central vessel) vs <b>follicles</b> (avascular centre)</td></tr>
+      <tr><td><b>Tear film</b></td><td>Narrow beam, NaFl</td><td>Meniscus ≈0.2 mm+; <b>TBUT &lt; 10 s abnormal</b></td></tr>
+      <tr><td><b>Cornea</b></td><td>Parallelepiped + optic section</td><td>Staining, infiltrates, NV, KPs; KC: Vogt's striae, Fleischer ring</td></tr>
+      <tr><td><b>Anterior chamber</b></td><td>Van Herick + conical beam</td><td>Angle depth, cells/flare, hyphaema/hypopyon</td></tr>
+      <tr><td><b>Iris</b></td><td>Diffuse, tangential, <b>before dilation</b></td><td>Rubeosis, synechiae, naevi, TIDs</td></tr>
+      <tr><td><b>Lens</b></td><td>Optic section + retro</td><td>Nuclear (section), cortical & PSC (retro); LOCS III</td></tr>
+      <tr><td><b>Ant. vitreous</b></td><td>Focus behind the lens</td><td><b>Shafer's sign</b> (tobacco dust) = retinal tear → urgent</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="cataract">
+  <h2>Cataract types</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Type</th><th>Looks like</th><th>Best view</th><th>Key link / symptom</th></tr></thead>
+    <tbody>
+      <tr><td><b>Nuclear</b></td><td>Yellow → brown central nucleus</td><td>Optic section</td><td>Age; myopic shift ("second sight")</td></tr>
+      <tr><td><b>Cortical</b></td><td>Wedge-shaped spokes from the periphery</td><td>Retro from fundus</td><td>Age, diabetes; glare at night</td></tr>
+      <tr><td><b>PSC</b></td><td>Granular plaque on posterior capsule, central</td><td>Retro from fundus</td><td><b>Steroids</b>, diabetes, uveitis, radiation; glare & poor near VA</td></tr>
+      <tr><td><b>Anterior subcapsular</b></td><td>White plaque under anterior capsule</td><td>Optic section / diffuse</td><td>Trauma, atopy, glaukomflecken after angle closure</td></tr>
+      <tr><td><b>Mature</b></td><td>Whole lens white, no red reflex</td><td>Diffuse</td><td>VA ~HM/LP; fundus not visible</td></tr>
+      <tr><td><b>Christmas tree</b></td><td>Polychromatic needle crystals in cortex</td><td>Direct focal</td><td><b>Myotonic dystrophy</b></td></tr>
+      <tr><td><b>Cerulean (blue-dot)</b></td><td>Small bluish dots in cortex</td><td>Direct focal / retro</td><td>Congenital, usually visually insignificant</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="vh">
+  <h2>Van Herick grades</h2>
+  <p class="sec-sub">Narrowest beam, 60° temporal, microscope straight ahead, beam perpendicular at the limbus. Compare the dark gap with corneal thickness (CT). Try it in the simulator above.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Grade</th><th>Gap : CT</th><th>Angle</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td class="n">4</td><td class="n">≥ 1</td><td><span class="pill ok">Wide open</span></td><td>Safe to dilate</td></tr>
+      <tr><td class="n">3</td><td class="n">1/4 – 1/2</td><td><span class="pill ok">Incapable of closure</span></td><td>Usually safe</td></tr>
+      <tr><td class="n">2</td><td class="n">1/4</td><td><span class="pill w">Narrow, closure possible</span></td><td>Gonioscopy before dilating</td></tr>
+      <tr><td class="n">1</td><td class="n">&lt; 1/4</td><td><span class="pill c">Very narrow</span></td><td>Don't dilate; refer</td></tr>
+      <tr><td class="n">0</td><td class="n">0</td><td><span class="pill c">Closed</span></td><td>Refer</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="pearls">
+  <h2>Exam pearls</h2>
+  <div class="grid">
+    <div class="card"><ul>
+      <li><b>Microcysts</b> = reversed illumination; <b>vacuoles</b> = unreversed.</li>
+      <li>Cells/flare need a <b>dark room</b> (Tyndall effect).</li>
+      <li><b>Flare 3+</b> = iris details hazy.</li>
+      <li>Always add the <b>yellow filter</b> with fluorescein.</li></ul></div>
+    <div class="card"><ul>
+      <li>Examine the <b>iris before dilation</b> (rubeosis).</li>
+      <li>Cortical & PSC → <b>retro from the fundus</b>, dilated.</li>
+      <li>Record <b>location, size, depth</b>, drawing and grade.</li>
+      <li>Van Herick is screening; <b>gonioscopy</b> is the gold standard.</li></ul></div>
+  </div>
+</section>
+
+<section id="quiz">
+  <h2>Quick quiz</h2>
+  <div class="quiz">
+    <div class="qhead"><span id="qnum"></span><span id="qscore"></span></div>
+    <h3 id="qtext"></h3>
+    <div class="qopts" id="qopts"></div>
+    <div id="qexp" class="tip"></div>
+    <button class="btn" id="qnext" type="button" hidden>Next question</button>
+  </div>
+</section>
+</main>
+
+<footer>Simulated images are schematic teaching aids. Settings are approximate and vary by instrument and reference.</footer>
+
+<script>
+(()=>{
+const W=640,H=400,CX=320,CY=205,R=150,PUP=40,PUPD=80,TAU=Math.PI*2;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const DPR=Math.min(2,window.devicePixelRatio||1);
+cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function off(){const c=document.createElement('canvas');c.width=W*DPR;c.height=H*DPR;const x=c.getContext('2d');x.setTransform(DPR,0,0,DPR,0,0);return[c,x];}
+function softened(src,f){const w=Math.max(1,Math.round(src.width*f)),h=Math.max(1,Math.round(src.height*f));
+  const a=document.createElement('canvas');a.width=w;a.height=h;const ax=a.getContext('2d');ax.imageSmoothingQuality='high';ax.drawImage(src,0,0,w,h);
+  const b=document.createElement('canvas');b.width=src.width;b.height=src.height;const bx=b.getContext('2d');bx.imageSmoothingQuality='high';bx.drawImage(a,0,0,src.width,src.height);return b;}
+const AP={l:[CX-340,CY+8],tc:[CX-10,CY-292],r:[CX+340,CY-6],bc:[CX+12,CY+300]};
+function aperture(x,begin=true){if(begin)x.beginPath();x.moveTo(...AP.l);x.quadraticCurveTo(...AP.tc,...AP.r);x.quadraticCurveTo(...AP.bc,...AP.l);x.closePath();}
+function qpt(p0,p1,p2,t){const u=1-t;return[u*u*p0[0]+2*u*t*p1[0]+t*t*p2[0],u*u*p0[1]+2*u*t*p1[1]+t*t*p2[1]];}
+
+/* ================= eye artwork ================= */
+function drawIris(x,pr,r){
+  const g=x.createRadialGradient(CX,CY,pr,CX,CY,R);
+  g.addColorStop(0,'#3e220e');g.addColorStop(.12,'#6a4220');g.addColorStop(.3,'#9a6a37');g.addColorStop(.45,'#835528');g.addColorStop(.75,'#6a4220');g.addColorStop(.93,'#4a2c14');g.addColorStop(1,'#24130a');
+  x.beginPath();x.arc(CX,CY,R,0,TAU);x.fillStyle=g;x.fill();
+  // fine stromal fibres
+  for(let i=0;i<1800;i++){
+    const a=r()*TAU,r0=pr+r()*24,r1=pr+(R-pr)*(.45+r()*.55),am=a+(r()-.5)*.12;
+    x.beginPath();x.moveTo(CX+Math.cos(a)*r0,CY+Math.sin(a)*r0);
+    x.quadraticCurveTo(CX+Math.cos(am)*(r0+r1)/2,CY+Math.sin(am)*(r0+r1)/2,CX+Math.cos(a+(r()-.5)*.05)*r1,CY+Math.sin(a+(r()-.5)*.05)*r1);
+    const light=r()>.55;x.strokeStyle=light?`rgba(${215+r()*30|0},${160+r()*35|0},${95+r()*30|0},${.05+r()*.16})`:`rgba(28,12,4,${.08+r()*.2})`;
+    x.lineWidth=.35+r()*1.1;x.stroke();
+  }
+  // radial furrows
+  for(let i=0;i<70;i++){const a=r()*TAU,r0=pr+(R-pr)*.35,r1=R*(.8+r()*.18);x.beginPath();x.moveTo(CX+Math.cos(a)*r0,CY+Math.sin(a)*r0);x.lineTo(CX+Math.cos(a)*r1,CY+Math.sin(a)*r1);x.strokeStyle=`rgba(20,8,2,${.12+r()*.14})`;x.lineWidth=1.5+r()*2;x.stroke();}
+  // collarette (raised zig-zag ridge)
+  const rc=pr+(R-pr)*.3;
+  x.beginPath();for(let i=0;i<=160;i++){const a=i/160*TAU,rr=rc+Math.sin(i*1.9)*3+Math.sin(i*.7)*4+(r()-.5)*2;x.lineTo(CX+Math.cos(a)*rr,CY+Math.sin(a)*rr);}x.closePath();
+  x.strokeStyle='rgba(230,182,115,.42)';x.lineWidth=3;x.stroke();x.strokeStyle='rgba(30,14,4,.35)';x.lineWidth=1;x.stroke();
+  // crypts
+  for(let i=0;i<34;i++){const a=r()*TAU,d=rc+6+r()*(R-rc)*.45,ex=CX+Math.cos(a)*d,ey=CY+Math.sin(a)*d,rx=3+r()*7,ry=1.6+r()*3;
+    x.save();x.translate(ex,ey);x.rotate(a+Math.PI/2);x.beginPath();x.ellipse(0,0,rx,ry,0,0,TAU);x.fillStyle='rgba(18,8,2,.62)';x.fill();x.strokeStyle='rgba(225,175,110,.25)';x.lineWidth=1;x.stroke();x.restore();}
+  // contraction furrows
+  for(let k=0;k<4;k++){const rr=R*(.78+k*.05);let a0=r()*TAU;for(let s=0;s<3;s++){const len=.5+r()*1.1;x.beginPath();x.arc(CX,CY,rr,a0,a0+len);x.strokeStyle='rgba(18,8,2,.3)';x.lineWidth=1.2;x.stroke();a0+=len+.4+r();}}
+  // freckles
+  for(let i=0;i<5;i++){const a=r()*TAU,d=rc+r()*(R-rc)*.7;x.beginPath();x.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d,2+r()*3,0,TAU);x.fillStyle='rgba(40,18,6,.7)';x.fill();}
+  // limbal shadow
+  const lr=x.createRadialGradient(CX,CY,R-16,CX,CY,R+5);lr.addColorStop(0,'rgba(0,0,0,0)');lr.addColorStop(1,'rgba(8,4,2,.85)');x.beginPath();x.arc(CX,CY,R+5,0,TAU);x.fillStyle=lr;x.fill();
+  // pupil + ruff
+  x.beginPath();x.arc(CX,CY,pr,0,TAU);x.fillStyle='#030101';x.fill();
+  for(let i=0;i<170;i++){const a=i/170*TAU;x.beginPath();x.arc(CX+Math.cos(a)*(pr+1.2),CY+Math.sin(a)*(pr+1.2),1.4+r()*.8,0,TAU);x.fillStyle=`rgba(${45+r()*30|0},20,6,.95)`;x.fill();}
+}
+function branch(x,r,px,py,ang,wd,depth,deep){
+  if(ang===null)ang=Math.atan2(CY-py,CX-px)+(r()-.5)*.7;
+  const col=deep?`rgba(120,35,60,${.3+r()*.2})`:`rgba(${175+r()*45|0},${28+r()*28|0},${32+r()*16|0},${.45+r()*.4})`;
+  const steps=5+(r()*7|0),len=(deep?20:13)*(1-depth*.18);
+  x.beginPath();x.moveTo(px,py);
+  for(let s=0;s<steps;s++){
+    ang+=(r()-.5)*.8;px+=Math.cos(ang)*len;py+=Math.sin(ang)*len;
+    if(Math.hypot(px-CX,py-CY)<R+3)break;x.lineTo(px,py);
+    if(depth<2&&r()<.2){x.strokeStyle=col;x.lineWidth=wd;x.stroke();branch(x,r,px,py,ang+(r()<.5?-1:1)*(.5+r()*.7),wd*.6,depth+1,deep);x.beginPath();x.moveTo(px,py);}
+  }
+  x.strokeStyle=col;x.lineWidth=wd;x.stroke();
+}
+function vesselLayer(r,dens,deep){const[c,x]=off();x.lineCap='round';x.lineJoin='round';
+  const n=Math.round((deep?12:30)*dens);
+  for(let i=0;i<n;i++){const side=i%2?1:-1;branch(x,r,CX+side*(R+130+r()*170),CY+(r()-.5)*240,null,deep?2.8:(1+r()*1.2),0,deep);}
+  return softened(c,deep?.3:.85);}
+function lashLayer(r){const[c,x]=off();x.lineCap='round';x.strokeStyle='#100804';
+  for(let t=.02;t<.98;t+=.011){const[p,q]=qpt(AP.l,AP.tc,AP.r,t);if(p<-30||p>W+30)continue;const n=(t-.5)*1.5;x.lineWidth=1.8+r()*1.6;x.beginPath();x.moveTo(p,q-4);x.quadraticCurveTo(p+n*14,q-24,p+n*32+(r()-.5)*10,q-38-r()*14);x.stroke();}
+  for(let t=.04;t<.96;t+=.02){const[p,q]=qpt(AP.r,AP.bc,AP.l,t);const n=(.5-t)*1.3;x.lineWidth=1.2+r()*.9;x.beginPath();x.moveTo(p,q+4);x.quadraticCurveTo(p+n*8,q+14,p+n*16,q+22+r()*6);x.stroke();}
+  return c;}
+function makeEye(pr,o={}){
+  const[c,x]=off();const r=rng(o.seed||11);
+  let g=x.createRadialGradient(CX,CY,150,CX,CY,470);g.addColorStop(0,'#8a5442');g.addColorStop(.55,'#5b3325');g.addColorStop(1,'#25130b');x.fillStyle=g;x.fillRect(0,0,W,H);
+  for(let i=0;i<140;i++){x.fillStyle=`rgba(${r()<.5?'40,18,10':'160,100,78'},${.03+r()*.05})`;x.beginPath();x.arc(r()*W,r()*H,8+r()*34,0,TAU);x.fill();}
+  x.save();aperture(x);x.clip();
+  g=x.createRadialGradient(CX,CY,R*.95,CX,CY,370);g.addColorStop(0,'#f3efea');g.addColorStop(.4,'#e6dbd0');g.addColorStop(1,'#a58a76');x.fillStyle=g;x.fillRect(0,0,W,H);
+  for(let i=0;i<34;i++){const a=r()*TAU,d=R+20+r()*150;x.fillStyle=`rgba(${205+r()*40|0},${150+r()*40|0},135,${.05+r()*.07})`;x.beginPath();x.arc(CX+Math.cos(a)*d*1.3,CY+Math.sin(a)*d*.7,10+r()*32,0,TAU);x.fill();}
+  x.globalAlpha=.7;x.drawImage(vesselLayer(r,1,true),0,0,W,H);x.globalAlpha=1;
+  x.drawImage(vesselLayer(r,o.vessels||1,false),0,0,W,H);
+  if(o.haem){x.save();x.translate(CX+R+78,CY+28);x.rotate(.25);x.beginPath();
+    for(let i=0;i<=28;i++){const a=i/28*TAU,rr=(i%3?24:30)+Math.sin(i*1.7)*4;x.lineTo(Math.cos(a)*rr*1.45,Math.sin(a)*rr);}x.closePath();
+    x.fillStyle='rgba(168,18,22,.9)';x.shadowColor='rgba(168,18,22,.7)';x.shadowBlur=12;x.fill();x.restore();}
+  const[ic,ix]=off();drawIris(ix,pr,r);x.drawImage(softened(ic,.72),0,0,W,H);
+  // tear film sheen
+  const sh=x.createRadialGradient(CX-40,CY-50,10,CX,CY,R);sh.addColorStop(0,'rgba(255,255,255,.07)');sh.addColorStop(1,'rgba(255,255,255,0)');x.beginPath();x.arc(CX,CY,R,0,TAU);x.fillStyle=sh;x.fill();
+  x.restore();
+  x.save();x.lineWidth=10;x.strokeStyle='rgba(122,58,44,.95)';aperture(x);x.stroke();x.lineWidth=2.5;x.strokeStyle='rgba(55,22,15,.85)';x.stroke();x.restore();
+  x.drawImage(softened(lashLayer(r),.38),0,0,W,H);
+  return c;
+}
+const EYE=makeEye(PUP),EYE_DIL=makeEye(PUPD,{seed:12}),EYE_RF=makeEye(PUP,{haem:true,vessels:1.6,seed:14});
+let RF_IMG=null;
+function redFree(){if(RF_IMG)return RF_IMG;const[c,x]=off();x.setTransform(1,0,0,1,0,0);x.drawImage(EYE_RF,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4){const v=Math.min(255,p[i+1]*1.05+p[i+2]*.08);p[i]=v*.33;p[i+1]=v;p[i+2]=v*.45;}x.putImageData(d,0,0);return RF_IMG=c;}
+const GRAIN=(()=>{const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const d=x.createImageData(W,H);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=255;}x.putImageData(d,0,0);return c;})();
+
+/* ================= helpers ================= */
+function img(i){ctx.drawImage(i,0,0,W,H);}
+function dim(i,amb){img(i);ctx.fillStyle=`rgba(2,3,7,${1-amb})`;ctx.fillRect(0,0,W,H);}
+function warm(a){ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(255,226,165,${a})`;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';}
+function clipRect(x,y,w,h){ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();}
+function clipCircle(r){ctx.beginPath();ctx.arc(CX,CY,r,0,TAU);ctx.clip();}
+function clipAnnulus(r0,r1){ctx.beginPath();ctx.arc(CX,CY,r1,0,TAU);ctx.arc(CX,CY,r0,0,TAU,true);ctx.clip();}
+function clipOutCircle(r){ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(CX,CY,r,0,TAU,true);ctx.clip();}
+function glowDot(x,y,r,col,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();}
+function post(){ctx.save();ctx.globalAlpha=.075;ctx.globalCompositeOperation='overlay';ctx.drawImage(GRAIN,0,0,W,H);ctx.restore();}
+function slitReflex(x,y,h){ctx.save();ctx.shadowColor='rgba(255,255,255,1)';ctx.shadowBlur=12;ctx.fillStyle='rgba(255,255,252,.97)';ctx.fillRect(x,y-h/2,2.4,h);ctx.restore();}
+function windowReflex(x,y){ctx.save();ctx.shadowColor='rgba(255,255,255,.9)';ctx.shadowBlur=14;ctx.fillStyle='rgba(255,255,252,.9)';ctx.beginPath();ctx.ellipse(x,y,9,6,0,0,TAU);ctx.fill();ctx.restore();glowDot(x,y,26,'255,245,225',.18);}
+function hud(lines){hudQ=lines;}
+function drawTag(x,y,text,tx,ty,col='#e9edf6'){ctx.save();ctx.strokeStyle='rgba(233,237,246,.6)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(tx,ty);ctx.stroke();ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle=col;ctx.fill();
+  ctx.font='600 12px "IBM Plex Sans", sans-serif';ctx.textBaseline='middle';const w=ctx.measureText(text).width;let bx=tx<x?tx-w-12:tx+2;bx=Math.max(4,Math.min(W-w-16,bx));
+  ctx.fillStyle='rgba(5,8,18,.78)';ctx.fillRect(bx,ty-10,w+12,20);ctx.fillStyle=col;ctx.fillText(text,bx+6,ty);ctx.restore();}
+let labelQ=[],overQ=[],hudQ=[],LABELS=true,RETICLE=false;
+function tag(...a){labelQ.push(()=>drawTag(...a));}
+function sectionPath(x0,t,top,bot,bulge){ctx.beginPath();ctx.moveTo(x0,top);ctx.quadraticCurveTo(x0-bulge,(top+bot)/2,x0,bot);ctx.lineTo(x0+t,bot);ctx.quadraticCurveTo(x0+t-bulge,(top+bot)/2,x0+t,top);ctx.closePath();}
+function corneaFill(x0,t,a=1){const g=ctx.createLinearGradient(x0-10,0,x0+t,0);
+  g.addColorStop(0,`rgba(255,250,234,${.96*a})`);g.addColorStop(.12,`rgba(255,238,195,${.55*a})`);g.addColorStop(.5,`rgba(222,212,190,${.3*a})`);g.addColorStop(.9,`rgba(255,236,192,${.42*a})`);g.addColorStop(1,`rgba(255,248,232,${.85*a})`);return g;}
+function nucColor(g){const t=Math.min(1,g/6);const c1=[175,188,220],c2=[238,206,120],c3=[150,86,30];let c;
+  if(t<.5){const u=t/.5;c=c1.map((v,i)=>v+(c2[i]-v)*u);}else{const u=(t-.5)/.5;c=c2.map((v,i)=>v+(c3[i]-v)*u);}
+  const a=.24+t*.64;return k=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${(Math.min(1,a*k)).toFixed(3)})`;}
+
+/* ================= lens & cataract renderers ================= */
+function lensBand(xa,lw,o){
+  const top=CY-o.pr-6,bot=CY+o.pr+6,b1=10,b2=12,type=o.type,r=rng(31);
+  const path=()=>{ctx.beginPath();ctx.moveTo(xa,top);ctx.quadraticCurveTo(xa-b1,CY,xa,bot);ctx.lineTo(xa+lw,bot);ctx.quadraticCurveTo(xa+lw+b2,CY,xa+lw,top);ctx.closePath();};
+  const X=f=>xa+f*lw;
+  ctx.save();path();
+  const N=nucColor(type==='nuclear'?o.g:.6);
+  const g=ctx.createLinearGradient(xa-6,0,xa+lw+8,0);
+  g.addColorStop(0,'rgba(228,234,250,.92)');g.addColorStop(.05,'rgba(150,166,205,.22)');g.addColorStop(.13,'rgba(196,206,232,.5)');g.addColorStop(.2,'rgba(150,166,205,.2)');
+  g.addColorStop(.3,N(.65));g.addColorStop(.5,N(1));g.addColorStop(.7,N(.65));
+  g.addColorStop(.8,'rgba(150,166,205,.2)');g.addColorStop(.87,'rgba(190,200,228,.46)');g.addColorStop(.95,'rgba(150,166,205,.22)');g.addColorStop(1,'rgba(222,230,248,.82)');
+  ctx.shadowColor='rgba(170,190,240,.45)';ctx.shadowBlur=14;ctx.fillStyle=g;ctx.fill();ctx.shadowBlur=0;
+  ctx.clip();
+  ctx.shadowBlur=6;
+  if(type==='mature'){ctx.fillStyle='rgba(240,236,224,.9)';ctx.fillRect(xa-20,top,lw+40,bot-top);for(let i=0;i<20;i++){ctx.strokeStyle='rgba(255,255,250,.5)';ctx.lineWidth=1;ctx.beginPath();const y=top+r()*(bot-top);ctx.moveTo(X(.05),y);ctx.lineTo(X(.95),y+(r()-.5)*20);ctx.stroke();}}
+  if(type==='cortical'){ctx.shadowColor='rgba(255,255,240,.8)';for(let i=0;i<9;i++){const sgn=i%2?1:-1,y=CY+sgn*(o.pr*.4+r()*o.pr*.55),f=r()<.5?.04+r()*.14:.8+r()*.14;ctx.fillStyle=`rgba(244,242,232,${.6+r()*.3})`;ctx.beginPath();ctx.ellipse(X(f),y,lw*.05+2,10+r()*14,0,0,TAU);ctx.fill();}}
+  if(type==='psc'){ctx.shadowColor='rgba(255,250,230,.8)';for(let i=0;i<170;i++){const y=CY+(r()-.5)*44*Math.sqrt(r()),f=.9+r()*.1;ctx.fillStyle=`rgba(248,244,228,${.5+r()*.45})`;ctx.beginPath();ctx.arc(X(f),y,.8+r()*1.4,0,TAU);ctx.fill();}}
+  if(type==='asc'){ctx.shadowColor='rgba(255,255,245,.9)';ctx.fillStyle='rgba(248,248,240,.9)';ctx.beginPath();ctx.ellipse(X(.025),CY,lw*.035+3,20,0,0,TAU);ctx.fill();}
+  if(type==='xmas'){for(let i=0;i<70;i++){const f=r()<.5?.03+r()*.2:.78+r()*.2,y=CY+(r()-.5)*o.pr*1.8,a=r()*Math.PI,l=3+r()*6,hue=r()*360;ctx.shadowColor=`hsla(${hue},100%,70%,1)`;ctx.strokeStyle=`hsla(${hue},95%,72%,.95)`;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(X(f)-Math.cos(a)*l/2,y-Math.sin(a)*l/2);ctx.lineTo(X(f)+Math.cos(a)*l/2,y+Math.sin(a)*l/2);ctx.stroke();}}
+  if(type==='cerulean'){ctx.shadowColor='rgba(140,190,255,.9)';for(let i=0;i<50;i++){const f=r()<.5?.04+r()*.18:.78+r()*.18,y=CY+(r()-.5)*o.pr*1.8;ctx.fillStyle='rgba(150,198,255,.85)';ctx.beginPath();ctx.arc(X(f),y,1.4+r()*1.6,0,TAU);ctx.fill();}}
+  ctx.restore();
+}
+function spokes(r,P,n,col,alpha,dark){
+  for(let i=0;i<n;i++){const a=i/n*TAU+(r()-.5)*.4,len=P*(.25+r()*.4),wd=.05+r()*.08,tip=P-len;
+    const g=ctx.createLinearGradient(CX+Math.cos(a)*P,CY+Math.sin(a)*P,CX+Math.cos(a)*tip,CY+Math.sin(a)*tip);
+    g.addColorStop(0,`rgba(${col},${alpha})`);g.addColorStop(.75,`rgba(${col},${alpha*.7})`);g.addColorStop(1,`rgba(${col},0)`);
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(CX+Math.cos(a-wd)*(P+3),CY+Math.sin(a-wd)*(P+3));
+    ctx.quadraticCurveTo(CX+Math.cos(a-wd*.3)*(P-len*.5),CY+Math.sin(a-wd*.3)*(P-len*.5),CX+Math.cos(a)*tip,CY+Math.sin(a)*tip);
+    ctx.quadraticCurveTo(CX+Math.cos(a+wd*.3)*(P-len*.5),CY+Math.sin(a+wd*.3)*(P-len*.5),CX+Math.cos(a+wd)*(P+3),CY+Math.sin(a+wd)*(P+3));ctx.closePath();ctx.fill();
+    if(!dark&&r()<.6){ctx.strokeStyle=`rgba(${col},${alpha*.5})`;ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(CX+Math.cos(a+wd*1.8)*P,CY+Math.sin(a+wd*1.8)*P);ctx.lineTo(CX+Math.cos(a+wd*1.6)*(P-len*.6),CY+Math.sin(a+wd*1.6)*(P-len*.6));ctx.stroke();}}
+}
+function lensDiffuse(type,g,P){
+  const r=rng(41);ctx.save();clipCircle(P-1);
+  if(type==='nuclear'){const N=nucColor(g);const gr=ctx.createRadialGradient(CX,CY,0,CX,CY,P*.8);gr.addColorStop(0,N(.95));gr.addColorStop(.6,N(.55));gr.addColorStop(1,N(0));ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);}
+  if(type==='cortical'){ctx.save();ctx.shadowColor='rgba(240,238,228,.6)';ctx.shadowBlur=8;spokes(r,P,13,'226,224,214',.5,false);ctx.restore();}
+  if(type==='psc'){for(let i=0;i<220;i++){const a=r()*TAU,d=Math.sqrt(r())*24;ctx.fillStyle=`rgba(210,205,190,${.12+r()*.2})`;ctx.beginPath();ctx.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d,1+r()*1.4,0,TAU);ctx.fill();}}
+  if(type==='asc'){ctx.save();ctx.shadowColor='rgba(255,255,245,.7)';ctx.shadowBlur=10;ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*TAU,rr=18+Math.sin(i*2.1)*3+r()*2;ctx.lineTo(CX+Math.cos(a)*rr,CY+Math.sin(a)*rr*.85);}ctx.closePath();ctx.fillStyle='rgba(242,240,232,.9)';ctx.fill();ctx.restore();}
+  if(type==='mature'){const gr=ctx.createRadialGradient(CX-15,CY-15,5,CX,CY,P);gr.addColorStop(0,'#f1eee6');gr.addColorStop(1,'#bdb5a4');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.globalAlpha=.5;spokes(r,P,16,'255,255,250',.5,false);ctx.globalAlpha=1;}
+  if(type==='xmas'){for(let i=0;i<110;i++){const a=r()*TAU,d=P*(.25+r()*.72),hue=r()*360;ctx.save();ctx.shadowColor=`hsla(${hue},100%,70%,1)`;ctx.shadowBlur=6;ctx.fillStyle=`hsla(${hue},100%,78%,.95)`;ctx.beginPath();ctx.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d,.9+r()*.9,0,TAU);ctx.fill();ctx.restore();}}
+  if(type==='cerulean'){for(let i=0;i<60;i++){const a=r()*TAU,d=P*(.2+r()*.75);glowDot(CX+Math.cos(a)*d,CY+Math.sin(a)*d,3+r()*2.5,'150,195,255',.75);}}
+  ctx.restore();
+}
+function redReflex(P,dull=0){ctx.save();clipCircle(P);const g=ctx.createRadialGradient(CX-8,CY-6,0,CX,CY,P);g.addColorStop(0,'#ffaa62');g.addColorStop(.65,'#e3602c');g.addColorStop(1,'#9c2c14');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  if(dull){ctx.fillStyle=`rgba(40,14,4,${dull})`;ctx.fillRect(0,0,W,H);}ctx.restore();}
+function lensRetro(type,g,P){
+  const r=rng(51);
+  if(type==='mature'){ctx.save();clipCircle(P);ctx.fillStyle='#2d211b';ctx.fillRect(0,0,W,H);const gr=ctx.createRadialGradient(CX,CY,P*.6,CX,CY,P);gr.addColorStop(0,'rgba(120,50,25,0)');gr.addColorStop(1,'rgba(120,50,25,.35)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.restore();return;}
+  redReflex(P);
+  ctx.save();clipCircle(P);
+  if(type==='nuclear'){const gr=ctx.createRadialGradient(CX,CY,0,CX,CY,P*.7);gr.addColorStop(0,`rgba(70,32,8,${.1*g})`);gr.addColorStop(1,'rgba(70,32,8,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+    if(g>=3){ctx.beginPath();ctx.arc(CX,CY,P*.42,0,TAU);ctx.strokeStyle=`rgba(60,20,5,${.08*g})`;ctx.lineWidth=5;ctx.stroke();}}
+  if(type==='cortical')spokes(r,P,11,'30,9,3',.82,true);
+  if(type==='psc'){ctx.save();ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=5;for(let i=0;i<320;i++){const a=r()*TAU,d=Math.sqrt(r())*(24+5*Math.sin(a*3));ctx.fillStyle=`rgba(${25+r()*35|0},10,3,${.45+r()*.45})`;ctx.beginPath();ctx.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d*.9,1+r()*2,0,TAU);ctx.fill();}ctx.restore();
+    for(let i=0;i<10;i++){const a=r()*TAU,d=20+r()*8;glowDot(CX+Math.cos(a)*d,CY+Math.sin(a)*d,2.4,'255,220,170',.8);}}
+  if(type==='asc'){ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*TAU,rr=18+Math.sin(i*2.1)*3+r()*2;ctx.lineTo(CX+Math.cos(a)*rr,CY+Math.sin(a)*rr*.85);}ctx.closePath();ctx.fillStyle='rgba(28,9,3,.85)';ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=6;ctx.fill();}
+  if(type==='xmas'){for(let i=0;i<90;i++){const a=r()*TAU,d=P*(.2+r()*.75),an=r()*Math.PI,l=3+r()*6,x=CX+Math.cos(a)*d,y=CY+Math.sin(a)*d;ctx.strokeStyle='rgba(30,10,4,.8)';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(x-Math.cos(an)*l/2,y-Math.sin(an)*l/2);ctx.lineTo(x+Math.cos(an)*l/2,y+Math.sin(an)*l/2);ctx.stroke();}}
+  if(type==='cerulean'){for(let i=0;i<55;i++){const a=r()*TAU,d=P*(.2+r()*.75);ctx.beginPath();ctx.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d,1.6+r()*1.8,0,TAU);ctx.fillStyle='rgba(40,14,8,.75)';ctx.fill();}}
+  ctx.restore();
+  ctx.save();ctx.beginPath();ctx.arc(CX,CY,P,0,TAU);ctx.strokeStyle='rgba(255,140,70,.35)';ctx.lineWidth=2;ctx.shadowColor='rgba(255,120,60,.7)';ctx.shadowBlur=12;ctx.stroke();ctx.restore();
+}
+
+/* ================= techniques ================= */
+function drawDiffuse(s){
+  const z=[1,1.4,1.95][s.zoom];
+  ctx.save();ctx.translate(CX,CY);ctx.scale(z,z);ctx.translate(-CX+(z>1?20:0),-CY+(z>1?8:0));
+  img(EYE);
+  const g=ctx.createRadialGradient(CX-190,CY-80,10,CX-190,CY-80,520);g.addColorStop(0,'rgba(255,240,215,.16)');g.addColorStop(1,'rgba(0,0,0,.32)');ctx.fillStyle=g;ctx.fillRect(-W,-H,3*W,3*H);
+  windowReflex(CX-34,CY-36);
+  ctx.restore();post();
+  hud([`DIFFUSE · ${['6×','10×','16×'][s.zoom]}`,'wide beam + diffuser · 45° temporal']);
+  live(`Low-mag overview at ${['6×','10×','16×'][s.zoom]}. Scan lids, lashes, conjunctiva, cornea.`);
+}
+function drawFocal(s){
+  const PX=30,w=Math.max(1.6,s.width*PX),sn=Math.sin(s.angle*Math.PI/180);
+  const t=.55*PX*1.8*sn+w,x0=CX-82,gap=2.6*PX*sn,xi=x0+t+gap;
+  dim(EYE,.1);
+  ctx.save();clipRect(x0,0,w,H);clipOutCircle(R+1);img(EYE);warm(.2);ctx.restore();
+  ctx.save();clipRect(xi,0,w,H);clipAnnulus(PUP,R);img(EYE);warm(.3);ctx.restore();
+  ctx.save();clipCircle(PUP-1);lensBand(xi+4,3.6*PX*sn*.55+w,{type:'clear',g:0,pr:PUP});ctx.restore();
+  const dy=Math.sqrt(R*R-(x0-CX)**2)+2;
+  ctx.save();aperture(ctx);ctx.clip();sectionPath(x0,t,CY-dy,CY+dy,16);ctx.fillStyle=corneaFill(x0,t);ctx.shadowColor='rgba(255,215,140,.75)';ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;
+  ctx.clip();const sx=x0+w*.5+(t-w)*.38,rx=(t-w)*.16+w*.5;const sg=ctx.createRadialGradient(sx,CY-46,0,sx,CY-46,Math.max(rx,14));sg.addColorStop(0,'rgba(255,255,255,.95)');sg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(sx,CY-46,Math.max(rx,5)+3,15,0,0,TAU);ctx.fill();ctx.restore();
+  slitReflex(x0-14,CY+6,46);
+  post();
+  const mode=s.width<=.3?'OPTIC SECTION':s.width>=.9?'PARALLELEPIPED':'NARROW BEAM';
+  hud([`${mode} · ${s.width.toFixed(1)} mm · ${s.angle}°`,'16× · white light']);
+  tag(x0+t/2,CY-dy+30,'Cornea',x0-70,CY-dy+26);
+  tag(sx,CY-46,'Stromal scar',x0-80,CY-80);
+  tag(x0-13,CY+20,'Slit reflex',x0-90,CY+70);
+  const iy=CY-Math.sqrt(Math.max(0,R*R-(xi+w/2-CX)**2))+22;
+  tag(xi+w/2,iy,'Iris',xi+80,iy-20);
+  tag(xi+20,CY+14,'Lens',xi+120,CY+70);
+  live(s.width<=.3?'Thin section: read the layers and the exact depth of the scar.':'Wide block: easier to scan, but depth is harder to judge. Narrow it to localise.');
+}
+let cells=[];
+function seedCells(n){const r=rng(5);cells=[];for(let i=0;i<n;i++)cells.push({u:r(),v:r(),sp:.3+r()*.7,ph:r()*TAU,sz:.8+r()*.8});}
+function drawConical(s,time){
+  const z=1.9,fx=CX-62;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.translate(CX,CY);ctx.scale(z,z);ctx.translate(-fx,-CY);dim(EYE,.035);
+  const x0=CX-100,t=16,xl=CX-12,h=11,fl=[0,1,2,3][s.cells];
+  if(fl>0){ctx.save();ctx.beginPath();ctx.moveTo(x0+t,CY-h);ctx.lineTo(xl,CY-h+1);ctx.lineTo(xl,CY+h-1);ctx.lineTo(x0+t,CY+h);ctx.closePath();const g=ctx.createLinearGradient(x0+t,0,xl,0);g.addColorStop(0,`rgba(235,238,255,${.075*fl})`);g.addColorStop(1,`rgba(235,238,255,${.05*fl})`);ctx.fillStyle=g;ctx.shadowColor=`rgba(220,228,255,${.15*fl})`;ctx.shadowBlur=12;ctx.fill();ctx.restore();}
+  const N=[0,10,22,55][s.cells];if(cells.length!==N)seedCells(N);
+  const L=xl-(x0+t)-6;
+  for(const c of cells){const v=reduce?c.v:((c.v+time*.00003*c.sp)%1);const x=x0+t+3+c.u*L,y=CY+h-2-v*(2*h-4);const tw=reduce?1:.65+.35*Math.sin(time*.003+c.ph);glowDot(x,y,c.sz*2.2,'255,255,255',.95*tw);}
+  ctx.save();sectionPath(x0,t,CY-h,CY+h,2);ctx.fillStyle=corneaFill(x0,t);ctx.shadowColor='rgba(255,215,140,.85)';ctx.shadowBlur=14;ctx.fill();ctx.restore();
+  ctx.save();clipCircle(PUP-1);ctx.fillStyle='rgba(185,198,232,.55)';ctx.shadowColor='rgba(170,190,240,.6)';ctx.shadowBlur=10;ctx.fillRect(xl,CY-h+1,16,2*h-2);ctx.restore();
+  ctx.restore();post();
+  hud(['CONICAL BEAM']);
+  const sx=x=>(x-fx)*z+CX;
+  tag(sx(x0+t/2),CY-h*z,'Cornea',sx(x0)-30,CY-80);
+  tag(sx((x0+t+xl)/2),CY+h*z,'Anterior chamber',sx((x0+t+xl)/2),CY+80);
+  tag(sx(xl+8),CY-h*z,'Lens',sx(xl)+60,CY-80);
+  live(['Normal: the beam disappears between cornea and lens (optically empty).','Mild: a few cells floating like dust in a sunbeam.','Moderate: many cells and a slightly hazy beam (flare).','Severe: lots of cells and a milky beam. This is active anterior uveitis.'][s.cells]);
+}
+const MOS={};
+function voronoiMosaic(v){
+  if(MOS[v])return MOS[v];
+  const LW=90,LH=200,SC=4,PW=LW*SC,PH=LH*SC,r=rng(40+v),sp=4.3;
+  let pts=[];
+  for(let row=-1;row<LH/(sp*.866)+1;row++)for(let col=-1;col<LW/sp+1;col++){const j=v===1?1.8:.6;pts.push([col*sp+(row%2?sp/2:0)+(r()-.5)*j,row*sp*.866+(r()-.5)*j,.9+r()*.2]);}
+  if(v===1){pts=pts.filter(()=>r()>.33);for(let i=0;i<30;i++)pts.push([r()*LW,r()*LH,.9+r()*.2]);}
+  const cell=6,gw=Math.ceil(LW/cell)+1,gh=Math.ceil(LH/cell)+1,grid=Array.from({length:gw*gh},()=>[]);
+  pts.forEach((p,i)=>{const gx=Math.max(0,Math.min(gw-1,Math.floor(p[0]/cell))),gy=Math.max(0,Math.min(gh-1,Math.floor(p[1]/cell)));grid[gy*gw+gx].push(i);});
+  const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');const id=x.createImageData(PW,PH),d=id.data;
+  for(let py=0;py<PH;py++)for(let px=0;px<PW;px++){
+    const fx=px/SC,fy=py/SC,gx=Math.floor(fx/cell),gy=Math.floor(fy/cell);let d1=1e9,d2=1e9,b=-1;
+    for(let yy=gy-2;yy<=gy+2;yy++)for(let xx=gx-2;xx<=gx+2;xx++){if(xx<0||yy<0||xx>=gw||yy>=gh)continue;for(const i of grid[yy*gw+xx]){const dx=pts[i][0]-fx,dy=pts[i][1]-fy,dd=dx*dx+dy*dy;if(dd<d1){d2=d1;d1=dd;b=i;}else if(dd<d2)d2=dd;}}
+    const edge=Math.sqrt(d2)-Math.sqrt(d1),k=pts[b]?pts[b][2]:1;
+    let L=(edge<.35?.62:edge<.7?.82:1)*k;
+    const o=(py*PW+px)*4;d[o]=Math.min(255,226*L);d[o+1]=Math.min(255,178*L);d[o+2]=Math.min(255,98*L);d[o+3]=255;}
+  x.putImageData(id,0,0);return MOS[v]={c:softened(c,.7),LW,LH};
+}
+function stripPath(x,cx,top,bot,w,bend){x.beginPath();x.moveTo(cx-w/2+bend,top);x.quadraticCurveTo(cx-w/2-bend,(top+bot)/2,cx-w/2+bend,bot);x.lineTo(cx+w/2+bend,bot);x.quadraticCurveTo(cx+w/2-bend,(top+bot)/2,cx+w/2+bend,top);x.closePath();}
+function softMask(fn,f){const[c,x]=off();x.fillStyle='#fff';fn(x);x.fill();return softened(c,f);}
+function drawSpecular(s){
+  const st=s.step;
+  ctx.fillStyle='#06070a';ctx.fillRect(0,0,W,H);
+  const top=-20,bot=420,bend=18,ax=226,px=346,bw=px-ax,ex=ax+16,nx=px-30,rt=CY-82,rb=CY+82;
+  // corneal parallelepiped
+  ctx.save();stripPath(ctx,(ax+px)/2,top,bot,bw,bend);ctx.fillStyle='rgba(175,186,206,.14)';ctx.fill();ctx.restore();
+  const edge=(x0,c)=>{ctx.save();ctx.beginPath();ctx.moveTo(x0+bend,top);ctx.quadraticCurveTo(x0-bend,(top+bot)/2,x0+bend,bot);ctx.strokeStyle=c;ctx.lineWidth=1.6;ctx.stroke();ctx.restore();};
+  edge(ax,'rgba(255,246,228,.7)');edge(px,'rgba(232,220,198,.4)');
+  if(st>=1){const em=softMask(x=>stripPath(x,ex,rt+4,rb-4,26,bend*.95),.14);
+    ctx.save();ctx.shadowColor='rgba(255,255,255,1)';ctx.shadowBlur=26;ctx.drawImage(em,0,0,W,H);ctx.drawImage(em,0,0,W,H);ctx.restore();}
+  if(st>=2){
+    const m=voronoiMosaic(s.find===1?1:0);const [tc,tx]=off();
+    tx.fillStyle='rgb(205,162,94)';tx.fillRect(0,0,W,H);tx.globalAlpha=.7;tx.drawImage(m.c,nx-m.LW/2,CY-m.LH/2,m.LW,m.LH);tx.globalAlpha=1;
+    if(s.find===2){const r=rng(3);for(let i=0;i<26;i++){const y=CY+(r()-.5)*150,x=nx+(r()-.5)*34;tx.beginPath();tx.arc(x,y,1+r()*1.3,0,TAU);tx.fillStyle='rgba(45,28,10,.9)';tx.fill();}}
+    tx.globalCompositeOperation='destination-in';tx.drawImage(softMask(x=>stripPath(x,nx,rt+12,rb-12,38,bend*.85),.12),0,0,W,H);
+    ctx.drawImage(tc,0,0,W,H);
+  }
+  post();
+  hud(['SPECULAR REFLECTION','40×','beam 1–1.5 mm','one eyepiece','light 30° · scope 30°']);
+  overQ.push(()=>{
+    if(st===0){drawTag(ax+40,CY,'Corneal parallelepiped',ax-40,42);}
+    if(st>=1){drawTag(ex,CY-40,'① Glare from the front surface (too bright)',ex-60,30);}
+    if(st>=2){
+      const bx=512,by=212,br=92;
+      ctx.save();ctx.strokeStyle='rgba(255,210,122,.9)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(nx,CY+8,20,0,TAU);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(nx+18,CY);ctx.lineTo(bx-br*.97,by-24);ctx.moveTo(nx+16,CY+18);ctx.lineTo(bx-br*.97,by+24);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(bx,by,br,0,TAU);ctx.clip();ctx.fillStyle='rgb(200,158,92)';ctx.fillRect(bx-br,by-br,2*br,2*br);
+      const m=voronoiMosaic(s.find===1?1:0);ctx.imageSmoothingEnabled=true;ctx.drawImage(m.c,90,300,170,170,bx-br,by-br,2*br,2*br);
+      if(s.find===2){const r=rng(8);for(let i=0;i<11;i++){const a=r()*TAU,d=Math.sqrt(r())*(br-14),x=bx+Math.cos(a)*d,y=by+Math.sin(a)*d,rr=5+r()*5;ctx.beginPath();ctx.arc(x,y,rr,0,TAU);ctx.fillStyle='rgba(30,18,6,.92)';ctx.fill();ctx.beginPath();ctx.arc(x-.6,y-.6,rr+1,Math.PI*.95,Math.PI*1.6);ctx.strokeStyle='rgba(255,236,190,.8)';ctx.lineWidth=1.2;ctx.stroke();}}
+      ctx.restore();
+      ctx.save();ctx.beginPath();ctx.arc(bx,by,br,0,TAU);ctx.strokeStyle='#ffd27a';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.font='600 11px "IBM Plex Mono", monospace';ctx.fillStyle='#ffd27a';ctx.textAlign='center';ctx.fillText('ZOOMED',bx,by-br-10);ctx.restore();
+      drawTag(nx,CY+60,'② Golden zone beside it = endothelium',nx-80,H-24);
+      drawTag(bx,by+br-6,['Even hexagons: healthy','Mixed cell sizes: polymegethism','Dark drops: guttata (Fuchs\')'][s.find],bx-20,H-52);
+    }
+  });
+  live(st===0?'Step 1: put the light about 30° on one side and the microscope about 30° on the other side (angle in = angle out). Use a 1–1.5 mm beam at high magnification.':
+       st===1?'Step 2: move the beam until you hit the very bright glare. It comes from the tear film/epithelium and is too bright to see any detail.':
+       ['Step 3: look just beside the glare and focus slightly deeper with one eye. The golden zone shows the endothelial cells as small, even hexagons.','Step 3: cells of very different sizes (polymegethism) are typical of long-term contact lens wear.','Step 3: dark drops that don\'t reflect light are guttata, the sign of Fuchs\' endothelial dystrophy.'][s.find]);
+}
+function drawRetro(s){
+  const m=s.mode;
+  if(m===3){drawMicrocysts();return;}
+  if(m===2){dim(EYE,.11);redReflex(PUP);
+    const[c,x]=off();const r=rng(9);x.lineCap='round';
+    for(let i=0;i<48;i++){const a=i/48*TAU+(r()-.5)*.05,d0=PUP+32+r()*12,d1=d0+16+r()*28;x.beginPath();x.moveTo(CX+Math.cos(a)*d0,CY+Math.sin(a)*d0);x.lineTo(CX+Math.cos(a)*d1,CY+Math.sin(a)*d1);x.strokeStyle=`rgba(255,${95+r()*50|0},45,${.55+r()*.4})`;x.lineWidth=2.5+r()*2;x.stroke();}
+    ctx.save();ctx.globalCompositeOperation='screen';ctx.drawImage(softened(c,.55),0,0,W,H);ctx.drawImage(softened(c,.25),0,0,W,H);ctx.restore();
+    windowReflex(CX-18,CY-18);post();
+    hud(['RETRO FROM FUNDUS · coaxial ≈0°','iris transillumination']);
+    tag(CX+Math.cos(-.6)*(PUP+52),CY+Math.sin(-.6)*(PUP+52),'Spoke-like TIDs',CX+190,CY-120);
+    live('Red reflex shines through mid-peripheral spokes: pigment dispersion syndrome.');return;}
+  dim(EYE_DIL,.1);lensRetro(m===1?'cortical':'clear',0,PUPD);windowReflex(CX-20,CY-22);post();
+  hud(['RETRO FROM FUNDUS · coaxial ≈0°','dilated pupil · focus on the lens']);
+  if(m===0){tag(CX+20,CY+PUPD-14,'Even red reflex',CX+170,CY+130);live('Even, bright red reflex: no lens opacity. More cataract types in the Cataract tab.');}
+  else{tag(CX+Math.cos(.3)*(PUPD-18),CY+Math.sin(.3)*(PUPD-18),'Cortical spokes',CX+170,CY-110);live('Dark wedges from the periphery pointing to the centre: cortical cataract.');}
+}
+function drawMicrocysts(){
+  ctx.save();ctx.translate(CX,CY);ctx.scale(4,4);ctx.translate(-(CX+62),-(CY+10));dim(EYE,.1);ctx.restore();
+  ctx.save();clipRect(400,0,W-400,H);ctx.translate(CX,CY);ctx.scale(4,4);ctx.translate(-(CX+62),-(CY+10));img(EYE);ctx.restore();
+  ctx.save();const eg=ctx.createLinearGradient(385,0,430,0);eg.addColorStop(0,'rgba(2,3,7,1)');eg.addColorStop(1,'rgba(2,3,7,0)');ctx.fillStyle=eg;ctx.fillRect(385,0,45,H);warm(0);ctx.restore();
+  ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle='rgba(255,215,150,.22)';ctx.fillRect(420,0,W-420,H);ctx.restore();
+  const r=rng(77);
+  for(let i=0;i<110;i++){const x=250+r()*300,y=40+r()*230,rr=1.8+r()*1.4;const lg=ctx.createLinearGradient(x-rr,0,x+rr,0);lg.addColorStop(0,'rgba(255,250,232,.95)');lg.addColorStop(1,'rgba(30,18,8,.9)');ctx.fillStyle=lg;ctx.beginPath();ctx.arc(x,y,rr,0,TAU);ctx.fill();}
+  labelQ.push(()=>{  // inset comparison
+  const bx=16,by=284,bw=290,bh=110;ctx.save();ctx.fillStyle='rgba(5,8,18,.88)';ctx.fillRect(bx,by,bw,bh);ctx.strokeStyle='#223152';ctx.strokeRect(bx,by,bw,bh);
+  const cell=(x,label,rev,col)=>{const g=ctx.createLinearGradient(x,0,x+80,0);g.addColorStop(0,'#0a0806');g.addColorStop(.5,'#2a1d10');g.addColorStop(1,'#d9a560');ctx.fillStyle=g;ctx.fillRect(x,by+12,80,60);
+    const cx=x+40,cy=by+42,rr=16,lg=ctx.createLinearGradient(cx-rr,0,cx+rr,0);if(rev){lg.addColorStop(0,'rgba(255,250,232,.97)');lg.addColorStop(1,'rgba(25,14,6,.95)');}else{lg.addColorStop(0,'rgba(25,14,6,.95)');lg.addColorStop(1,'rgba(255,250,232,.97)');}
+    ctx.fillStyle=lg;ctx.beginPath();ctx.arc(cx,cy,rr,0,TAU);ctx.fill();ctx.font='600 11px "IBM Plex Sans", sans-serif';ctx.fillStyle=col;ctx.fillText(label,x,by+90);ctx.fillStyle='#93a1bf';ctx.font='500 10px "IBM Plex Sans", sans-serif';ctx.fillText(rev?'reversed':'unreversed',x,by+104);};
+  cell(bx+20,'Microcyst',true,'#ffd27a');cell(bx+170,'Vacuole / bulla',false,'#7b97ff');
+  ctx.font='500 10px "IBM Plex Mono", monospace';ctx.fillStyle='#93a1bf';ctx.fillText('light →',bx+bw-56,by+10);ctx.restore();});
+  post();
+  hud(['RETRO FROM IRIS · 25×','beam on iris (right) · cornea in focus']);
+  tag(520,200,'Beam on iris (bright background)',520,250);
+  tag(352,120,'Epithelial microcysts',380,40);
+  live('Microcysts show reversed illumination: their bright side faces away from the lit background. Vacuoles are unreversed.');
+}
+function drawScatter(s){
+  dim(EYE,.05);
+  if(s.mode===1){const g=ctx.createRadialGradient(CX,CY,0,CX,CY,66);g.addColorStop(0,'rgba(236,236,228,.5)');g.addColorStop(1,'rgba(236,236,228,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(CX,CY,66,0,TAU);ctx.fill();}
+  if(s.mode===2){ctx.save();ctx.translate(CX+36,CY-40);ctx.beginPath();for(let i=0;i<=18;i++){const a=i/18*TAU,rr=13+Math.sin(i*2.3)*4;ctx.lineTo(Math.cos(a)*rr*1.3,Math.sin(a)*rr);}ctx.closePath();ctx.fillStyle='rgba(245,240,228,.45)';ctx.shadowColor='rgba(255,240,215,.9)';ctx.shadowBlur=18;ctx.fill();ctx.restore();}
+  ctx.save();ctx.beginPath();ctx.arc(CX,CY,R+3,0,TAU);ctx.strokeStyle='rgba(255,228,180,.5)';ctx.lineWidth=4;ctx.shadowColor='rgba(255,210,150,.95)';ctx.shadowBlur=24;ctx.stroke();ctx.restore();
+  glowDot(CX-R-4,CY,40,'255,236,190',.9);glowDot(CX-R-4,CY,12,'255,255,250',1);
+  post();
+  hud(['SCLEROTIC SCATTER · 6–10×','beam on temporal limbus · decoupled']);
+  tag(CX-R-4,CY,'Beam on limbus',CX-R-40,CY-120);
+  tag(CX+Math.cos(.8)*(R+3),CY+Math.sin(.8)*(R+3),'Limbal glow ring',CX+R+20,CY+150);
+  if(s.mode===1)tag(CX,CY+30,'Central corneal clouding',CX+110,CY+170);
+  if(s.mode===2)tag(CX+36,CY-40,'Faint scar lights up',CX+150,CY-130);
+  live(s.mode===0?'Clear cornea: the centre stays dark, only the limbus glows.':s.mode===1?'Grey central haze lights up: CCC / epithelial oedema (e.g. rigid lens wear).':'Any opacity scatters the trapped light and glows.');
+}
+function drawTangential(s){
+  const k=(s.angle-30)/55;img(EYE);
+  ctx.save();clipCircle(R+2);
+  const g=ctx.createLinearGradient(CX-R,0,CX+R,0);g.addColorStop(0,`rgba(255,232,190,${.12+.1*k})`);g.addColorStop(.5,`rgba(0,0,0,${.18+.25*k})`);g.addColorStop(1,`rgba(0,0,0,${.5+.38*k})`);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const nx=CX+64,ny=CY+46;
+  ctx.save();ctx.translate(nx+12+44*k,ny+4);ctx.scale(1.5+1.2*k,1);const sh=ctx.createRadialGradient(0,0,0,0,0,24);sh.addColorStop(0,`rgba(0,0,0,${.55+.3*k})`);sh.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=sh;ctx.beginPath();ctx.arc(0,0,24,0,TAU);ctx.fill();ctx.restore();
+  const bg=ctx.createRadialGradient(nx-10,ny-7,2,nx,ny,31);bg.addColorStop(0,'#7e4c27');bg.addColorStop(1,'#24120a');ctx.fillStyle=bg;ctx.beginPath();ctx.ellipse(nx,ny,30,21,0,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.ellipse(nx,ny,30,21,0,Math.PI*.6,Math.PI*1.45);ctx.strokeStyle=`rgba(255,226,180,${.3+.45*k})`;ctx.lineWidth=2.6;ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='rgba(2,3,8,.5)';ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(CX,CY,R+2,0,TAU,true);ctx.fill();
+  post();
+  hud([`TANGENTIAL · ${s.angle}° · 10–16×`,'light skims the surface']);
+  tag(nx,ny,'Raised iris naevus',CX+170,CY+150);
+  tag(nx+38+44*k,ny+6,'Shadow',CX+215,CY+50);
+  live(s.angle<50?'Low angle: relief is flat and hard to read. Increase the angle.':'High angle: elevations cast shadows, so you can tell flat from raised.');
+}
+let blinkT=performance.now();
+function drawCobalt(s,time){
+  img(EYE);
+  ctx.globalCompositeOperation='multiply';ctx.fillStyle=s.yellow?'#2a2c10':'#2d47d6';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle=s.yellow?'rgba(0,0,0,.35)':'rgba(10,18,70,.25)';ctx.fillRect(0,0,W,H);
+  const amp=s.yellow?1:.5,col=s.yellow?'140,255,120':'110,215,175';
+  ctx.save();ctx.shadowColor=`rgba(${col},.9)`;ctx.shadowBlur=10*amp;ctx.strokeStyle=`rgba(${col},${.85*amp})`;ctx.lineWidth=3.5;ctx.beginPath();
+  for(let t=.22;t<=.78;t+=.02){const[p,q]=qpt(AP.r,AP.bc,AP.l,t);t<.23?ctx.moveTo(p,q-6):ctx.lineTo(p,q-6);}ctx.stroke();ctx.restore();
+  const r=rng(17);let tt=0;
+  if(s.mode===0){ctx.save();ctx.shadowColor=`rgba(${col},.9)`;ctx.shadowBlur=6*amp;for(let i=0;i<100;i++){const a=r()*Math.PI*.9+Math.PI*.05,d=30+r()*(R-44);ctx.beginPath();ctx.arc(CX+Math.cos(a)*d,CY+Math.sin(a)*d*.9,1.3+r()*1.4,0,TAU);ctx.fillStyle=`rgba(${col},${(.55+r()*.45)*amp})`;ctx.fill();}ctx.restore();
+    tag(CX+20,CY+86,'Inferior SPK',CX+170,CY+150);live(s.yellow?'Punctate staining pops out with the yellow filter.':'Without the yellow filter, blue glare washes out the staining. Turn it on.');}
+  if(s.mode===1){ctx.save();ctx.translate(CX-20,CY+14);ctx.beginPath();for(let i=0;i<=26;i++){const a=i/26*TAU,rr=34+(i%2?6:-4)+Math.sin(i*1.3)*5;ctx.lineTo(Math.cos(a)*rr*1.2,Math.sin(a)*rr);}ctx.closePath();ctx.fillStyle=`rgba(${col},${.75*amp})`;ctx.shadowColor=`rgba(${col},.9)`;ctx.shadowBlur=18*amp;ctx.fill();ctx.restore();
+    tag(CX-20,CY+14,'Epithelial defect',CX-200,CY+150);live('A whole area without epithelium takes up the dye: corneal abrasion.');}
+  if(s.mode===2){tt=Math.min((time-blinkT)/1000,s.tbut+7);
+    ctx.save();clipCircle(R-2);ctx.fillStyle=`rgba(${col},${.34*amp})`;ctx.fillRect(0,0,W,H);
+    [[CX-30,CY+20],[CX+40,CY-15],[CX-60,CY-40],[CX+15,CY+55],[CX+70,CY+30],[CX-15,CY-70]].forEach(([x,y],i)=>{const e=tt-s.tbut-i*.45;if(e>0){const rr=Math.min(30,e*10);ctx.beginPath();ctx.ellipse(x,y,rr*1.3,rr*.8,i,0,TAU);ctx.fillStyle='rgba(4,8,22,.9)';ctx.fill();}});ctx.restore();
+    const broke=tt>=s.tbut;overQ.push(()=>{ctx.save();ctx.font='700 30px "IBM Plex Mono", monospace';ctx.textAlign='right';ctx.fillStyle=broke?(s.tbut<10?'#ff7f73':'#6fe38f'):'#e9edf6';ctx.shadowColor='rgba(0,0,0,.8)';ctx.shadowBlur=6;ctx.fillText(`${tt.toFixed(1)} s`,W-20,44);ctx.restore();});
+    if(broke)tag(CX-30,CY+20,'First dry spot',CX-200,CY+150);
+    live(!broke?'Timing… waiting for the first dark spot.':`Break-up at ${s.tbut} s → ${s.tbut<10?'ABNORMAL (< 10 s)':'normal (≥ 10 s)'}.`);}
+  post();
+  hud([`COBALT BLUE + NaFl · ${s.yellow?'yellow filter ON':'no barrier filter'}`,'6–16× · wide beam']);
+  if(s.mode!==2||tt>=s.tbut)tag(CX+150,CY+124,'Tear meniscus',CX+225,CY+178);
+}
+function drawRedFree(s){
+  img(s.on?redFree():EYE_RF);
+  const g=ctx.createRadialGradient(CX-180,CY-70,10,CX-180,CY-70,520);g.addColorStop(0,'rgba(255,255,255,.07)');g.addColorStop(1,'rgba(0,0,0,.28)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  windowReflex(CX-34,CY-36);post();
+  hud([`RED-FREE · ${s.on?'green filter ON':'white light'}`,'10–16×']);
+  tag(CX+R+78,CY+28,'Haemorrhage',CX+170,CY+170);
+  tag(CX-R-70,CY-20,'Conjunctival vessels',CX-210,CY-130);
+  live(s.on?'Red absorbs green, so vessels and blood turn black: much higher contrast.':'In white light, red vessels on a pink-white background have lower contrast.');
+}
+function drawVH(s){
+  const z=2.4,lx=250,fx=CX-R;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.translate(lx,CY);ctx.scale(z,z);ctx.translate(-fx,-CY);dim(EYE,.1);ctx.restore();
+  const CT=40,gap=s.ratio/100*CT,x0=lx+6,xi=x0+CT+gap,top=CY-160,bot=CY+160,bul=22;
+  const sg=ctx.createLinearGradient(x0-70,0,x0,0);sg.addColorStop(0,'rgba(255,220,160,0)');sg.addColorStop(1,'rgba(255,220,160,.22)');ctx.fillStyle=sg;ctx.fillRect(x0-70,top,70,bot-top);
+  ctx.save();ctx.beginPath();ctx.moveTo(xi,top);ctx.quadraticCurveTo(xi-bul,CY,xi,bot);ctx.lineTo(xi+12,bot);ctx.quadraticCurveTo(xi+12-bul,CY,xi+12,top);ctx.closePath();ctx.clip();
+  ctx.translate(lx,CY);ctx.scale(z,z);ctx.translate(-fx,-CY);img(EYE);ctx.setTransform(DPR,0,0,DPR,0,0);warm(.35);ctx.restore();
+  ctx.save();sectionPath(x0,CT,top,bot,bul);ctx.fillStyle=corneaFill(x0,CT);ctx.shadowColor='rgba(255,215,140,.8)';ctx.shadowBlur=18;ctx.fill();ctx.restore();
+  const cxAt=(x,y)=>{const t=(y-top)/(bot-top);return x-2*bul*t*(1-t);};
+  const my=CY+120,ca=cxAt(x0,my),cb=cxAt(x0+CT,my),ia=cxAt(xi,my);
+  ctx.save();ctx.lineWidth=2;ctx.strokeStyle='#ffd27a';ctx.beginPath();ctx.moveTo(ca,my);ctx.lineTo(cb,my);ctx.stroke();
+  ctx.strokeStyle='#7b97ff';ctx.beginPath();ctx.moveTo(cb+2,my+12);ctx.lineTo(ia,my+12);ctx.stroke();
+  ctx.font='600 11px "IBM Plex Mono", monospace';ctx.fillStyle='#ffd27a';ctx.fillText('CT',ca+CT/2-8,my+24);if(gap>16){ctx.fillStyle='#7b97ff';ctx.fillText('gap',cb+gap/2-10,my+28);}ctx.restore();
+  post();
+  const v=s.ratio/100;let g,txt,col;
+  if(v>=1){g=4;txt='Wide open';col='#6fe38f';}else if(v>=.3){g=3;txt='Incapable of closure';col='#6fe38f';}else if(v>=.2){g=2;txt='Narrow · gonioscopy first';col='#f3a95c';}else if(v>0){g=1;txt='Very narrow · do not dilate';col='#ff7f73';}else{g=0;txt='Closed · refer';col='#ff7f73';}
+  overQ.push(()=>{ctx.save();ctx.fillStyle='rgba(5,8,18,.8)';ctx.fillRect(W-214,H-80,200,66);ctx.strokeStyle=col;ctx.strokeRect(W-214,H-80,200,66);
+  ctx.font='700 30px "Fraunces", Georgia, serif';ctx.fillStyle=col;ctx.fillText(`Grade ${g}`,W-200,H-48);ctx.font='500 12px "IBM Plex Sans", sans-serif';ctx.fillStyle='#e9edf6';ctx.fillText(txt,W-200,H-26);ctx.restore();});
+  hud([`VAN HERICK · 60° temporal · gap = ${s.ratio}% CT`,'narrowest beam at the limbus']);
+  tag(cxAt(x0,CY-60)+CT/2,CY-60,'Corneal section',cxAt(x0,CY-60)+150,CY-130);
+  tag(cxAt(xi,CY-10)+6,CY-10,'Beam on iris',cxAt(xi,CY-10)+140,CY-55);
+  live(`Dark gap = ${s.ratio}% of corneal thickness → Grade ${g}.`);
+}
+
+/* ---------- cataract tab ---------- */
+const CAT=[
+ {k:'nuclear',name:'Nuclear',best:1,locs:'NO / NC',link:'Age',sym:'Myopic shift, dull colours',see:'The central nucleus turns yellow, then amber-brown, and becomes more opalescent. The cortex around it stays clearer.',tip:'Best in the optic section: compare nucleus colour with the clear cortex. Slide the grade up.'},
+ {k:'cortical',name:'Cortical',best:2,locs:'C',link:'Age, diabetes',sym:'Glare, esp. night driving',see:'Wedge-shaped (cuneiform) spokes running from the periphery toward the centre: white in direct light, black on retroillumination.',tip:'Best on retroillumination with a dilated pupil. Spokes may be hidden behind an undilated iris.'},
+ {k:'psc',name:'PSC',best:2,locs:'P',link:'Steroids, diabetes, uveitis, RT',sym:'Glare, poor near VA',see:'A granular, plaque-like opacity on the posterior capsule at the visual axis. Subtle in diffuse light, obvious on retro.',tip:'Classic exam link: long-term steroids → PSC. Worse with a small pupil (bright light, reading).'},
+ {k:'asc',name:'Ant. subcapsular',best:1,locs:'—',link:'Trauma, atopy, angle closure',sym:'Depends on size',see:'A white plaque just under the anterior capsule. In the optic section it sits at the very front of the lens.',tip:'Glaukomflecken (small anterior subcapsular flecks) suggest a previous acute angle-closure attack.'},
+ {k:'mature',name:'Mature',best:0,locs:'—',link:'Advanced age-related',sym:'VA ~HM / LP',see:'The whole lens is white (leukocoria in the pupil) and the red reflex is gone.',tip:'No fundus view: check pupils (RAPD) and consider B-scan before surgery.'},
+ {k:'xmas',name:'Christmas tree',best:1,locs:'—',link:'Myotonic dystrophy',sym:'Often mild',see:'Fine, polychromatic, needle-like crystals glittering in the cortex.',tip:'Rare but a favourite exam association: Christmas tree cataract → myotonic dystrophy.'},
+ {k:'cerulean',name:'Cerulean',best:1,locs:'—',link:'Congenital',sym:'Usually none',see:'Small bluish dots scattered through the cortex ("blue-dot" cataract).',tip:'Usually non-progressive and visually insignificant: document and monitor.'}
+];
+function drawCataract(s){
+  const c=CAT[s.type],view=s.view,g=c.k==='nuclear'?s.grade:0;
+  if(view===0){
+    img(EYE_DIL);const gg=ctx.createRadialGradient(CX-190,CY-80,10,CX-190,CY-80,520);gg.addColorStop(0,'rgba(255,240,215,.14)');gg.addColorStop(1,'rgba(0,0,0,.35)');ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);
+    lensDiffuse(c.k,g,PUPD);windowReflex(CX-30,CY-34);post();
+    hud([`CATARACT · DIFFUSE · 10×`,'dilated pupil · broad oblique beam']);
+  }else if(view===1){
+    dim(EYE_DIL,.09);const PX=30,sn=Math.sin(Math.PI/4),w=3,x0=CX-112,t=.55*PX*1.8*sn+w,xi=x0+t+2.4*PX*sn;
+    ctx.save();clipRect(xi,0,w+2,H);clipAnnulus(PUPD,R);img(EYE_DIL);warm(.3);ctx.restore();
+    ctx.save();clipCircle(PUPD-1);lensBand(xi+4,3.8*PX*sn*.78+w,{type:c.k,g,pr:PUPD});ctx.restore();
+    const dy=Math.sqrt(R*R-(x0-CX)**2)+2;
+    ctx.save();aperture(ctx);ctx.clip();sectionPath(x0,t,CY-dy,CY+dy,16);ctx.fillStyle=corneaFill(x0,t);ctx.shadowColor='rgba(255,215,140,.75)';ctx.shadowBlur=16;ctx.fill();ctx.restore();
+    slitReflex(x0-14,CY+6,46);post();
+    hud([`CATARACT · OPTIC SECTION · 16×`,'45° · dilated · beam through the lens']);
+    tag(x0+t/2,CY-dy+30,'Cornea',x0-70,CY-dy+26);
+    const lw=3.8*PX*sn*.78+w,X=f=>xi+4+f*lw;
+    tag(X(.02),CY-PUPD+10,'Anterior capsule',X(.02)-40,CY-PUPD-34);
+    tag(X(.5),CY+PUPD-16,'Nucleus',X(.5)+70,CY+PUPD+22);
+    tag(X(.98),CY-PUPD+14,'Posterior capsule',X(.98)+60,CY-PUPD-30);
+  }else{
+    dim(EYE_DIL,.1);lensRetro(c.k,g,PUPD);windowReflex(CX-20,CY-22);post();
+    hud([`CATARACT · RETRO FROM FUNDUS · 10×`,'coaxial ≈0° · dilated pupil']);
+  }
+  const views=['diffuse light','optic section','retroillumination'];
+  const bestTxt=s.view===c.best?'This is the best view for it.':`Best seen with ${views[c.best]}.`;
+  const opTag={nuclear:[CX,CY,'Nuclear opacity'],cortical:[CX+Math.cos(.3)*(PUPD-20),CY+Math.sin(.3)*(PUPD-20),'Cortical spokes'],psc:[CX+8,CY+6,'PSC plaque'],asc:[CX,CY,'Anterior subcapsular plaque'],mature:[CX+10,CY+20,c.k==='mature'&&s.view===2?'No red reflex':'White lens'],xmas:[CX+30,CY-30,'Polychromatic crystals'],cerulean:[CX+30,CY-30,'Blue dots']}[c.k];
+  if(view!==1)tag(opTag[0],opTag[1],opTag[2],CX+170,CY-130);
+  live(`${c.name}${c.k==='nuclear'?` (grade ${s.grade})`:''}: ${bestTxt}`);
+}
+
+const EP={x:CX,y:200,r:194};
+function eyepiece(){
+  ctx.save();
+  ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(EP.x,EP.y,EP.r,0,TAU,true);ctx.fillStyle='#020203';ctx.fill();
+  const g=ctx.createRadialGradient(EP.x,EP.y,EP.r*.7,EP.x,EP.y,EP.r+1);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.8,'rgba(0,0,0,.28)');g.addColorStop(1,'rgba(0,0,0,.97)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(EP.x,EP.y,EP.r+1,0,TAU);ctx.fill();
+  ctx.lineWidth=1.4;ctx.strokeStyle='rgba(90,120,255,.16)';ctx.beginPath();ctx.arc(EP.x,EP.y,EP.r-3,0,TAU);ctx.stroke();
+  ctx.strokeStyle='rgba(255,150,60,.10)';ctx.beginPath();ctx.arc(EP.x,EP.y,EP.r-5,0,TAU);ctx.stroke();
+  const hl=ctx.createLinearGradient(EP.x-EP.r,EP.y-EP.r,EP.x+EP.r,EP.y+EP.r);hl.addColorStop(0,'rgba(255,255,255,.035)');hl.addColorStop(.5,'rgba(255,255,255,0)');ctx.fillStyle=hl;ctx.beginPath();ctx.arc(EP.x,EP.y,EP.r,0,TAU);ctx.fill();
+  ctx.restore();
+}
+function reticle(){
+  ctx.save();ctx.strokeStyle='rgba(225,235,255,.55)';ctx.fillStyle='rgba(225,235,255,.6)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(EP.x-150,EP.y);ctx.lineTo(EP.x+150,EP.y);ctx.moveTo(EP.x,EP.y-150);ctx.lineTo(EP.x,EP.y+150);ctx.stroke();
+  for(let i=-15;i<=15;i++){const L=i%5===0?9:4;ctx.beginPath();ctx.moveTo(EP.x+i*10,EP.y-L);ctx.lineTo(EP.x+i*10,EP.y+L);ctx.stroke();ctx.beginPath();ctx.moveTo(EP.x-L,EP.y+i*10);ctx.lineTo(EP.x+L,EP.y+i*10);ctx.stroke();}
+  ctx.beginPath();ctx.arc(EP.x,EP.y,60,0,TAU);ctx.setLineDash([2,4]);ctx.stroke();ctx.setLineDash([]);
+  ctx.font='500 9px "IBM Plex Mono", monospace';ctx.fillText('0',EP.x+3,EP.y+16);ctx.fillText('5',EP.x+52,EP.y+16);ctx.fillText('10',EP.x+100,EP.y+16);
+  ctx.restore();
+}
+const roEl=document.getElementById('readout');let lastRO='';
+function readout(lines){if(!roEl)return;const items=lines.flatMap(l=>l.split(' · ')).filter(Boolean);const k=items.join('|');if(k===lastRO)return;lastRO=k;roEl.innerHTML=items.map((t,i)=>`<span${i===0?' class="hd"':''}>${t}</span>`).join('');}
+
+/* ================= technique definitions ================= */
+const T=[
+ {id:'diffuse',name:'Diffuse',alt:'Overview',geo:[-40,0,26],draw:drawDiffuse,st:{zoom:0},
+  ctl:[{k:'zoom',type:'seg',label:'Magnification',opts:['6×','10×','16×']}],
+  chips:[["Beam", "Wide + diffuser"], ["Angle", "30–45°"], ["Mag", "6–10×"]],see:"The whole front of the eye, softly lit.",uses:["First general look, always", "Lids, lashes, conjunctival redness", "Contact lens position and fit"],use:'',tip:"Always start the exam here."},
+ {id:'optic',name:'Optic section',alt:'Direct focal',geo:[-60,0,3],draw:drawFocal,st:{width:.1,angle:60},
+  ctl:[{k:'width',type:'range',label:'Beam width',min:.1,max:2.5,step:.1,fmt:v=>v.toFixed(1)+' mm'}],
+  chips:[["Beam", "Thinnest (0.1–0.2 mm)"], ["Angle", "45–60°"], ["Mag", "16–25×"]],see:"A thin slice through the cornea and lens.",uses:["Depth of a scar, foreign body or infiltrate", "Corneal thickness (thinning in KC)", "AC depth (Van Herick)", "Nuclear cataract"],use:'',tip:"Question asks about depth → optic section."},
+ {id:'para',name:'Parallelepiped',alt:'Direct focal',geo:[-45,0,12],draw:drawFocal,st:{width:1.5,angle:45},
+  ctl:[{k:'width',type:'range',label:'Beam width',min:.1,max:2.5,step:.1,fmt:v=>v.toFixed(1)+' mm'}],
+  chips:[["Beam", "1–2 mm"], ["Angle", "30–60°"], ["Mag", "10–16×"]],see:"A 3-D block of cornea.",uses:["Scanning the whole cornea", "Scars, new vessels, foreign bodies", "KPs on the endothelium", "Vogt's striae in keratoconus"],use:'',tip:"Find it with the parallelepiped, then narrow to an optic section to check depth."},
+ {id:'conical',name:'Conical beam',alt:'AC cells & flare',geo:[-50,0,6],draw:drawConical,st:{cells:2},
+  ctl:[{k:'cells',type:'seg',label:'Inflammation',opts:['None','Mild','Moderate','Severe']}],
+  chips:[["Beam", "Tiny spot 1×1 mm"], ["Angle", "45–60°"], ["Mag", "16–25×"]],see:"The anterior chamber, which is normally black.",uses:["Cells and flare in the AC", "Diagnosing anterior uveitis", "Checking response to treatment"],use:'',tip:"Dark room + maximum brightness."},
+ {id:'spec',name:'Specular reflection',alt:'Endothelium',geo:[-30,30,12],draw:drawSpecular,st:{step:2,find:0},
+  ctl:[{k:'step',type:'seg',label:'How to find it',opts:['1 · Set angles','2 · Find the glare','3 · Look beside it']},{k:'find',type:'seg',label:'Finding',opts:['Healthy','Polymegethism','Guttata'],when:s=>s.step===2}],
+  chips:[["Beam", "1–1.5 mm"], ["Angles", "30° / 30°"], ["Mag", "25–40×"]],see:"A bright glare, and beside it a golden zone: the endothelium.",uses:["Endothelial cells", "Guttata (Fuchs' dystrophy)", "Polymegethism (long-term CL wear)", "Tear lipid layer"],use:'',tip:"Light angle = microscope angle, and look with one eye."},
+ {id:'retro',name:'Retroillumination',alt:'Light from behind',geo:[-4,0,10],draw:drawRetro,st:{mode:1},
+  ctl:[{k:'mode',type:'seg',label:'Finding',opts:['Clear reflex','Cortical','Iris TIDs','Microcysts']}],
+  chips:[["Beam", "1–2 mm"], ["Angle", "Iris ≈45° · fundus ≈0°"], ["Mag", "10–25×"]],see:"Things lit from behind: opacities look dark.",uses:["Cortical and PSC cataract", "Iris transillumination defects", "Epithelial microcysts", "Ghost vessels"],use:'',tip:"Microcysts = reversed, vacuoles = unreversed."},
+ {id:'cataract',name:'Cataract types',alt:'Lens opacities',geo:[-45,0,4],draw:drawCataract,st:{type:0,view:1,grade:3},
+  ctl:[{k:'type',type:'seg',label:'Type',opts:CAT.map(c=>c.name)},{k:'view',type:'seg',label:'View',opts:['Diffuse','Optic section','Retro']},{k:'grade',type:'range',label:'Nuclear grade (LOCS III NO/NC)',min:1,max:6,step:1,fmt:v=>v,when:s=>s.type===0}],
+  chips:[],see:'',use:'',tip:'',
+  info:s=>{const c=CAT[s.type];return{chips:[['Best view',['Diffuse','Optic section','Retro'][c.best]],['Linked to',c.link],['Symptom',c.sym]],see:c.see,uses:['Best seen with: '+['diffuse light','optic section','retroillumination'][c.best],'Linked to: '+c.link,'Patient notices: '+c.sym.toLowerCase()],tip:c.tip};},
+  geoFn:s=>s.view===2?[-4,0,10]:s.view===0?[-40,0,26]:[-45,0,4]},
+ {id:'scatter',name:'Sclerotic scatter',alt:'Total internal reflection',geo:[-55,0,10],draw:drawScatter,st:{mode:1},
+  ctl:[{k:'mode',type:'seg',label:'Cornea',opts:['Clear','CCC / oedema','Faint scar']}],
+  chips:[["Beam", "1–2 mm on limbus"], ["Angle", "45–60°"], ["Mag", "6–10× or naked eye"]],see:"The limbus glows and any opacity lights up.",uses:["Central corneal clouding (rigid CL)", "Corneal oedema", "Faint scars"],use:'',tip:"Beam on the limbus, look at the centre."},
+ {id:'tang',name:'Tangential',alt:'Surface relief',geo:[-75,0,24],draw:drawTangential,st:{angle:75},
+  ctl:[{k:'angle',type:'range',label:'Illumination angle',min:30,max:85,step:5,fmt:v=>v+'°'}],
+  chips:[["Beam", "Wide"], ["Angle", "70–80°"], ["Mag", "10–16×"]],see:"Raised areas cast shadows.",uses:["Iris naevi and masses", "Iris surface", "Uneven corneal surface"],use:'',tip:"Bigger angle = stronger shadows."},
+ {id:'cobalt',name:'Cobalt blue + NaFl',alt:'Fluorescein',geo:[-40,0,26],draw:drawCobalt,st:{mode:0,yellow:1,tbut:6},
+  ctl:[{k:'mode',type:'seg',label:'Finding',opts:['SPK','Abrasion','TBUT']},{k:'yellow',type:'seg',label:'Yellow barrier filter',opts:['Off','On']},{type:'btn',label:'Blink (restart timer)',when:s=>s.mode===2,act:()=>{blinkT=performance.now();}}],
+  chips:[["Beam", "Wide"], ["Filter", "Blue + yellow"], ["Mag", "6–16×"]],see:"Damaged epithelium glows green.",uses:["Staining: SPK, abrasion", "TBUT (< 10 s = abnormal)", "RGP lens fit", "Seidel test for leaks"],use:'',tip:"Always add the yellow filter."},
+ {id:'redfree',name:'Red-free',alt:'Green filter',geo:[-40,0,22],draw:drawRedFree,st:{on:1},
+  ctl:[{k:'on',type:'seg',label:'Filter',opts:['White light','Red-free']}],
+  chips:[["Beam", "Wide"], ["Filter", "Green"], ["Mag", "10–16×"]],see:"Red things turn black.",uses:["Blood vessels and new vessels", "Haemorrhages", "Lissamine green staining"],use:'',tip:"Gives better contrast for vessels."},
+ {id:'vh',name:'Van Herick',alt:'Peripheral AC depth',geo:[-60,0,3],draw:drawVH,st:{ratio:100},
+  ctl:[{k:'ratio',type:'range',label:'Dark gap as % of CT',min:0,max:120,step:5,fmt:v=>v+'%'}],
+  chips:[["Beam", "Thinnest"], ["Angle", "60° temporal"], ["Mag", "10–16×"]],see:"Cornea, then a dark gap, then the iris.",uses:["Angle depth before dilating", "Grade ≤ 2 → gonioscopy first"],use:'',tip:"Put the beam exactly at the limbus."}
+];
+
+/* ================= UI ================= */
+const tabs=document.getElementById('tabs'),ctlEl=document.getElementById('controls'),liveEl=document.getElementById('live');
+let cur=T[0],dirty=true,lastLive='';
+function live(t){if(t!==lastLive){liveEl.textContent=t;lastLive=t;}}
+T.forEach((t,i)=>{const b=document.createElement('button');b.className='tab';b.role='tab';b.type='button';b.innerHTML=`<span class="ix">${String(i+1).padStart(2,'0')}</span><span class="nm">${t.name}</span>`;b.id='tab-'+t.id;b.addEventListener('click',()=>select(i));tabs.appendChild(b);});
+function panel(){
+  const d=cur.info?cur.info(cur.st):cur;
+  document.getElementById('pName').textContent=cur.id==='cataract'?CAT[cur.st.type].name+' cataract':cur.name;
+  document.getElementById('pAlt').textContent=cur.alt;
+  document.getElementById('pChips').innerHTML=d.chips.map(([a,b])=>`<div class="chip">${a}<b>${b}</b></div>`).join('');
+  document.getElementById('pSee').textContent=d.see;document.getElementById('pUse').innerHTML=(d.uses||[]).map(u=>`<li>${u}</li>`).join('');document.getElementById('pTip').innerHTML='<b>Remember:</b> '+d.tip;
+}
+function select(i){
+  cur=T[i];[...tabs.children].forEach((b,j)=>b.setAttribute('aria-selected',j===i?'true':'false'));const ab=tabs.children[i];if(ab&&ab.scrollIntoView&&dirty!==null)try{tabs.scrollTo({left:ab.offsetLeft-tabs.clientWidth/2+ab.clientWidth/2,behavior:reduce?'auto':'smooth'});}catch(e){}
+  if(cur.id==='cobalt')blinkT=performance.now();
+  panel();buildControls();geo();dirty=true;
+  try{history.replaceState(null,'','#'+cur.id);}catch(e){}
+}
+function changed(){if(cur.id==='cobalt')blinkT=performance.now();panel();geo();dirty=true;}
+function buildControls(){
+  ctlEl.innerHTML='';const s=cur.st;
+  cur.ctl.forEach((c,ci)=>{
+    if(c.when&&!c.when(s))return;
+    const d=document.createElement('div');d.className='ctl';
+    if(c.type==='range'){const id='c'+ci;d.innerHTML=`<label for="${id}"><span>${c.label}</span><output>${c.fmt(s[c.k])}</output></label><input id="${id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${s[c.k]}">`;
+      const inp=d.querySelector('input'),o=d.querySelector('output');inp.addEventListener('input',()=>{s[c.k]=+inp.value;o.textContent=c.fmt(s[c.k]);changed();});}
+    else if(c.type==='seg'){d.innerHTML=`<div class="lbl"><span>${c.label}</span></div><div class="seg" role="group" aria-label="${c.label}"></div>`;const g=d.querySelector('.seg');
+      c.opts.forEach((o,oi)=>{const b=document.createElement('button');b.type='button';b.textContent=o;b.setAttribute('aria-pressed',s[c.k]===oi?'true':'false');b.addEventListener('click',()=>{s[c.k]=oi;buildControls();changed();});g.appendChild(b);});}
+    else if(c.type==='btn'){d.innerHTML=`<div class="lbl"><span>Timer</span></div>`;const b=document.createElement('button');b.type='button';b.className='actbtn';b.textContent=c.label;b.addEventListener('click',()=>{c.act();dirty=true;});d.appendChild(b);}
+    ctlEl.appendChild(d);
+  });
+}
+function geo(){
+  let[la,ma,bw]=cur.geoFn?cur.geoFn(cur.st):cur.geo;
+  if(cur.id==='optic'||cur.id==='para'||cur.id==='tang')la=-cur.st.angle;
+  if(cur.st.width!==undefined)bw=2+cur.st.width*5;
+  document.getElementById('gLight').setAttribute('transform',`rotate(${la} 110 132)`);
+  document.getElementById('gMicro').setAttribute('transform',`rotate(${ma} 110 132)`);
+  const h=bw/2;document.getElementById('gBeam').setAttribute('points',`${110-h},70 ${110+h},70 ${110+Math.max(1,h*.5)},124 ${110-Math.max(1,h*.5)},124`);
+  document.getElementById('gAng').textContent=ma?`${Math.abs(la)}° / ${ma}°`:`${Math.abs(la)}°`;
+}
+function frame(time){
+  const anim=cur.id==='conical'||(cur.id==='cobalt'&&cur.st.mode===2);
+  if(dirty||anim){labelQ=[];overQ=[];hudQ=[];ctx.save();ctx.clearRect(0,0,W,H);cur.draw(cur.st,time);ctx.restore();eyepiece();if(RETICLE)reticle();for(const f of overQ){ctx.save();f();ctx.restore();}if(LABELS)for(const f of labelQ){ctx.save();f();ctx.restore();}readout(hudQ);dirty=false;}
+  requestAnimationFrame(frame);
+}
+function toggle(id,fn){const b=document.getElementById(id);b.addEventListener('click',()=>{const v=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',v?'true':'false');fn(v);dirty=true;});}
+
+const start=Math.max(0,T.findIndex(t=>'#'+t.id===location.hash));
+select(start);
+document.fonts&&document.fonts.ready.then(()=>{dirty=true;});
+requestAnimationFrame(frame);
+
+/* ================= quiz ================= */
+const Q=[
+  ["Best technique to see the endothelial mosaic?",["Optic section","Specular reflection","Sclerotic scatter","Diffuse"],1,"Angle of illumination = angle of observation, high mag, one eyepiece."],
+  ["Looking for AC cells. What is essential?",["Bright room","Dark room + conical beam","Green filter","Wide beam"],1,"Cells only show in darkness (Tyndall effect)."],
+  ["Van Herick gap = 1/4 of corneal thickness. Grade?",["4","3","2","1"],2,"Grade 2: narrow; gonioscopy before dilating."],
+  ["Van Herick illumination angle?",["30°","45°","60°","90°"],2,"60° temporal, microscope straight ahead."],
+  ["Depth of a corneal foreign body?",["Diffuse","Optic section","Tangential","Red-free"],1,"The optic section shows which layer it is in."],
+  ["Which shows reversed illumination?",["Vacuoles","Bullae","Microcysts","Ghost vessels"],2,"Microcysts are reversed; vacuoles and bullae are not."],
+  ["A patient on long-term oral steroids. Which cataract do you expect?",["Nuclear","Posterior subcapsular","Cerulean","Christmas tree"],1,"Steroids are the classic cause of PSC."],
+  ["Best way to grade a nuclear cataract?",["Optic section","Retro from fundus","Sclerotic scatter","Cobalt blue"],0,"The optic section shows nucleus colour and opalescence (LOCS III NO/NC)."],
+  ["Polychromatic needle-like crystals in the cortex suggest?",["Diabetes","Myotonic dystrophy","Trauma","Steroid use"],1,"Christmas tree cataract → myotonic dystrophy."],
+  ["Tobacco dust in the anterior vitreous suggests?",["Normal ageing","Retinal tear","Conjunctivitis","Cataract"],1,"Shafer's sign: urgent dilated retinal exam."]
+];
+let qi=0,score=0;
+const qt=document.getElementById('qtext'),qo=document.getElementById('qopts'),qe=document.getElementById('qexp'),qn=document.getElementById('qnext');
+function showQ(){
+  if(qi>=Q.length){qt.textContent=`Done! You scored ${score} of ${Q.length}`;qo.innerHTML='';qe.style.display='block';qe.textContent=score>=8?'Excellent, you\'re ready.':'Review the sections you missed and try again.';qn.hidden=false;qn.textContent='Retake';document.getElementById('qnum').textContent='';return;}
+  const q=Q[qi];document.getElementById('qnum').textContent=`Question ${qi+1} / ${Q.length}`;document.getElementById('qscore').textContent=`Score ${score}`;
+  qt.textContent=q[0];qo.innerHTML='';qe.style.display='none';qn.hidden=true;qn.textContent='Next question';
+  q[1].forEach((o,i)=>{const b=document.createElement('button');b.type='button';b.className='qopt';b.textContent=o;b.addEventListener('click',()=>{[...qo.children].forEach((c,j)=>{c.disabled=true;if(j===q[2])c.classList.add('right');});if(i===q[2])score++;else b.classList.add('wrong');qe.textContent=q[3];qe.style.display='block';qn.hidden=false;document.getElementById('qscore').textContent=`Score ${score}`;});qo.appendChild(b);});
+}
+qn.addEventListener('click',()=>{if(qi>=Q.length){qi=0;score=0;}else qi++;showQ();});
+showQ();
+})();
+
+</script>
+</body>
+</html>
